@@ -1,0 +1,823 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">
+ <head> 
+  <meta http-equiv="Content-Type" content="text/html;charset=utf-8" /> 
+  <meta http-equiv="Pragma" content="No-Cache" /> 
+  <meta http-equiv="Cache-Control" content="no-cache" /> 
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />     
+  <script type="text/javascript" src="/LSO/js/common/jquery-1.6.1.min.js"></script> 
+  <script type="text/javascript" src="/LSO/js/common/common.js"></script> 
+  <script type="text/javascript" src="/LSO/js/common/jquery.cookie.js"></script> 
+  <script type="text/javascript" src="/LSO/mask/js/jquery.loadmask.js"></script> 
+  <script type="text/javascript" src="/LSO/js/common/CookieUtil.js"></script> 
+  <script type="text/javascript">
+
+function openApiGuide(htmlName) {
+
+//	var temp = gubun;
+	$("#htmlName", $("#openApiForm")).val(htmlName);
+	$('#openApiForm').attr("action","guideResult.do");
+	$('#openApiForm').submit();
+
+}
+</script> 
+  <link rel="stylesheet" type="text/css" href="/LSO/css/common.css" />
+  <link rel="stylesheet" type="text/css" href="/LSO/css/main.css" />
+  <link rel="stylesheet" type="text/css" href="/LSO/mask/css/jquery.loadmask.css" />
+  <title>국가법령정보 공동활용</title>
+ </head> 
+ <body> 
+  <div class="area_skip">
+   <a href="#navi">본문 바로가기</a>
+  </div> 
+  <div class="header"> 
+   <div class="header-wrap"> 
+    <h1 class="header-logo"><a href="/LSO/main.do">국가법령정보 공동활용 LAW OPEN DATA</a></h1> 
+    <ul class="gnb"> 
+     <li><a href="/LSO/information/service.do" class="gnbmn01">이용안내</a></li> 
+     <li><a href="/LSO/openApi/guideList.do" class="gnbmn02">OPEN API</a></li> 
+     <li><a href="/LSO/cuCtgr/cuCategoryGuide.do" class="gnbmn03">맞춤형서비스</a></li> 
+     <li><a href="/LSO/lab/hangulAddr.do" class="gnbmn04">개발자LAB</a></li> 
+     <li><a href="/LSO/openState/hpGallery.do" class="gnbmn05">활용사례</a></li> 
+    </ul> 
+    <p class="header-util"> <a href="/LSO/usr/usrInfoMod.do" class="util01">마이페이지</a> <a href="/LSO/login.do" class="util02">로그인</a> </p> 
+   </div> 
+  </div> 
+  <div class="conbody"> 
+   <div id="sidemenu_left"> 
+    <script type="text/javascript">
+	$(document).ready(function(){
+		//alert("DOM 요소 로드 후 이벤트");
+	});
+	
+	window.onload = function() {
+		//alert("jsp 완전 로드 후 이벤트");
+		setLnbMenu();
+	};
+
+	function setLnbMenu() {
+		var currUrl = location.href;
+		/*이용안내*/
+		if((currUrl.indexOf("information/") > -1) || (currUrl.indexOf("support/notice") > -1)) {
+			$("#lnbTitle").html("이용안내");
+			$("#lnb").find("#service").css("display", "");
+			$("#lnb").find("#guide").css("display", "");
+			$("#lnb").find("#notice").css("display", ""); // add
+			if (currUrl.indexOf("service") > -1) $("#lnb").find("#service").addClass("menuon");
+			if (currUrl.indexOf("guide") > -1) $("#lnb").find("#guide").addClass("menuon");
+			if (currUrl.indexOf("notice") > -1) $("#lnb").find("#notice").addClass("menuon"); // add
+		}
+		
+		/*OpenApi*/
+		if (currUrl.indexOf("openApi/") > -1) {
+			$("#lnbTitle").html("OPENAPI");
+			$("#lnb").find("#guideList").css("display", "");
+			$("#lnb").find("#openApiCase").css("display", "");
+			$("#lnb").find("#cuAsk").css("display", "");
+			if (currUrl.indexOf("guideList") > -1) 	 $("#lnb").find("#guideList").addClass("menuon");
+			if (currUrl.indexOf("openApiCase") > -1) $("#lnb").find("#openApiCase").addClass("menuon");
+			if (currUrl.indexOf("cuAsk") > -1) 		 $("#lnb").find("#cuAsk").addClass("menuon");
+			
+		}
+		
+		/*맞춤형서비스*/
+		if (currUrl.indexOf("cuCtgr/") > -1) { 
+			$("#lnbTitle").html("맞춤형서비스");
+			$("#lnb").find("#cuCategoryGuide").css("display", "");
+			$("#lnb").find("#cuCategoryMain").css("display", "");
+			if (currUrl.indexOf("cuCategoryGuide") > -1) $("#lnb").find("#cuCategoryGuide").addClass("menuon");
+			if (currUrl.indexOf("cuCategoryMain") > -1) $("#lnb").find("#cuCategoryMain").addClass("menuon");
+		}
+			
+		/*개발자LAB*/
+		if((currUrl.indexOf("lab/") > -1) || (currUrl.indexOf("support/lsHstInf") > -1)) {
+			$("#lnbTitle").html("개발자LAB");
+			$("#lnb").find("#hangulAddr").css("display", "");
+			$("#lnb").find("#lawListSupport").css("display", "");
+			$("#lnb").find("#ipErrorCheck").css("display", "");
+			$("#lnb").find("#selfDiagnosis").css("display", "");
+			$("#lnb").find("#lsHstInf").css("display", "");
+			$("#lnb").find("#supportCase").css("display", "");
+			if (currUrl.indexOf("hangulAddr") > -1)     $("#lnb").find("#hangulAddr").addClass("menuon");
+			if (currUrl.indexOf("lawListSupport") > -1) $("#lnb").find("#lawListSupport").addClass("menuon");
+			if (currUrl.indexOf("ipErrorCheck") > -1)   $("#lnb").find("#ipErrorCheck").addClass("menuon");
+			if (currUrl.indexOf("selfDiagnosis") > -1)  $("#lnb").find("#selfDiagnosis").addClass("menuon");
+			/* if (currUrl.indexOf("jointUse") > -1) 	   $("#lnb4").find("#jointUse").addClass("menuon");
+			if (currUrl.indexOf("xmlRss") > -1) 	   $("#lnb4").find("#xmlRss").addClass("menuon");
+			if (currUrl.indexOf("searchOpenApi") > -1) $("#lnb4").find("#searchOpenApi").addClass("menuon"); */
+			if (currUrl.indexOf("lsHstInf") > -1) $("#lnb").find("#lsHstInf").addClass("menuon");
+			if (currUrl.indexOf("supportCase") > -1) $("#lnb").find("#supportCase").addClass("menuon");
+		}
+		
+		/*활용사례*/
+		if(currUrl.indexOf("openState/") > -1) {
+			$("#lnbTitle").html("활용사례");
+			$("#lnb").find("#hpGallery").css("display", "");
+			$("#lnb").find("#gallery").css("display", "");
+			$("#lnb").find("#orgList").css("display", "");
+			if (currUrl.indexOf("hpGallery") > -1) $("#lnb").find("#hpGallery").addClass("menuon");
+			if (currUrl.indexOf("gallery") > -1) $("#lnb").find("#gallery").addClass("menuon");
+			if (currUrl.indexOf("orgList") > -1) $("#lnb").find("#orgList").addClass("menuon");
+		}
+		
+		/*활용지원센터*/
+		/*
+		if(currUrl.indexOf("support/") > -1){ 
+			$("#lnbTitle").html("활용지원센터");
+			$("#lnb").find("#notice").css("display", "");
+			$("#lnb").find("#faq").css("display", "");
+			$("#lnb").find("#lsHstInf").css("display", "");
+			if (currUrl.indexOf("notice") > -1) 	 $("#lnb").find("#notice").addClass("menuon");
+			if (currUrl.indexOf("faq") > -1)	 	 $("#lnb").find("#faq").addClass("menuon");
+			if (currUrl.indexOf("lsHstInf") > -1) $("#lnb").find("#lsHstInf").addClass("menuon");
+		}
+		*/
+		/*마이페이지*/
+		if(currUrl.indexOf("usr/") > -1){ 
+			$("#lnbTitle").html("마이페이지");
+			$("#lnb").find("#usrInfo").css("display", "");
+			$("#lnb").find("#usrOcInfo").css("display", "");
+			$("#lnb").find("#combineError").css("display", "");
+			if(currUrl.indexOf("usrInfo") > -1) 	 $("#lnb").find("#usrInfo").addClass("menuon");
+			if(currUrl.indexOf("usrOcInfo") > -1) 	 $("#lnb").find("#usrOcInfo").addClass("menuon");
+			if(currUrl.indexOf("combineError") > -1) $("#lnb").find("#combineError").addClass("menuon");
+		}
+	}
+</script> 
+    <div id="sidemenu"> 
+     <div id="lnb"> 
+      <h2><span id="lnbTitle"></span></h2> 
+      <ul> 
+       <li id="service" style="display: none;"><a href="/LSO/information/service.do">공동활용 서비스란</a></li> 
+       <li id="guide" style="display: none;"><a href="/LSO/information/guide.do">이용안내</a></li> 
+       <li id="guideList" style="display: none;"><a href="/LSO/openApi/guideList.do">OPEN API 활용가이드</a></li> 
+       <li id="openApiCase" style="display: none;"><a href="/LSO/openApi/openApiCase.do">OPEN API 활용사례</a></li> 
+       <li id="cuAsk" style="display: none;"><a href="/LSO/openApi/cuAskList.do">OPEN API 신청</a></li> 
+       <li id="cuCategoryGuide" style="display: none;"><a href="/LSO/cuCtgr/cuCategoryGuide.do">맞춤형서비스 이용안내</a></li> 
+       <li id="cuCategoryMain" style="display: none;"><a href="/LSO/cuCtgr/cuCategoryMain.do">맞춤형서비스 신청</a></li> 
+       <li id="hangulAddr" style="display: none;"><a href="/LSO/lab/hangulAddr.do">법령한글주소</a></li> 
+       <li id="lawListSupport" style="display: none;"><a href="/LSO/lab/lawListSupport.do">법령목록지원</a></li> 
+       <li id="ipErrorCheck" style="display: none;"><a href="/LSO/lab/ipErrorCheck.do">IP 접속이력</a></li> 
+       <li id="selfDiagnosis" style="display: none;"><a href="/LSO/lab/selfDiagnosis.do">오류자가진단</a></li> 
+       <li id="supportCase" style="display: none;"><a href="/LSO/lab/supportCase.do">지원사례 및 질의응답</a></li> 
+       <li id="hpGallery" style="display: none;"><a href="/LSO/openState/hpGallery.do">홈페이지갤러리</a></li> 
+       <li id="gallery" style="display: none;"><a href="/LSO/openState/gallery.do">APP갤러리</a></li> 
+       <li id="orgList" style="display: none;"><a href="/LSO/openState/orgList.do">공공데이터현황</a></li> 
+       <li id="notice" style="display: none;"><a href="/LSO/support/noticeList.do">공지사항</a></li> 
+       <li id="faq" style="display: none;"><a href="/LSO/support/faq.do">FAQ</a></li> 
+       <li id="lsHstInf" style="display: none;"><a href="/LSO/support/lsHstInf.do">법령이력조회</a></li> 
+       <li id="usrInfo" style="display: none;"><a href="/LSO/usr/usrInfoMod.do">사용자정보관리</a></li> 
+       <li id="usrOcInfo" style="display: none;"><a href="/LSO/usr/usrOcInfoMod.do">API인증값변경</a></li> 
+       <li id="combineError" style="display: none;"><a href="/LSO/usr/combineErrorBrdForm.do">통합오류신고</a></li> 
+      </ul> 
+     </div> 
+    </div>
+   </div> 
+   <div class="area_contents"> 
+    <div class="navi" id="navi"> 
+     <ul> 
+      <li><a href="/LSO/main.do">홈 &gt;</a></li> 
+      <li><a href="/LSO/openApi/guideList.do">OPEN API &gt;</a></li> 
+      <li class="now"><a href="/LSO/openApi/guideList.do">OPEN API 활용가이드</a></li> 
+     </ul> 
+     <div class="tit"> 
+      <h3>OPEN API 활용가이드</h3> 
+     </div> 
+     <div class="conimg"> 
+      <img src="/LSO/images/subimg02.png" alt="openAPI 활용가이드" /> 
+     </div> 
+    </div> 
+    <!-- navi //--> 
+    <div class="contents"> 
+     <form id="openApiForm" method="post" action=""> 
+      <input type="hidden" id="openApi" name="openApi" value="" /> 
+      <input type="hidden" id="htmlName" name="htmlName" value="" /> 
+     </form> 
+     <p><img src="/LSO/images/open_top_ment.gif" alt="법제처 사이트에서 제공되는 검색에 대한 결과를 XML로 받아볼 수 있는 대화형 서비스입니다." /></p> 
+     <div class="boardlist"> 
+      <div class="area_search"> 
+       <p class="result_count">총 <span class="strong"> 191 </span>건</p> 
+      </div> 
+      <table class="blist" summary="첫째줄은 제공되는 OPEN API의 순번이며 두번째줄을 서비스구분이다. 세번째줄은 제공되는 OPEN API의 제목이다."> 
+       <caption>
+        OPEN API를 활용할 수 있도록 목록 및 본문 조회 가이드를 제공하는 표입니다.
+       </caption> 
+       <colgroup> 
+        <col width="15%" /> 
+        <col width="25%" /> 
+        <col width="30%" /> 
+        <col width="30%" /> 
+       </colgroup> 
+       <thead> 
+        <tr> 
+         <th scope="col">구분</th> 
+         <th scope="col">분류</th> 
+         <th scope="col" colspan="2">제공API</th> 
+        </tr> 
+       </thead> 
+       <tbody> 
+        <tr> 
+         <td rowspan="18" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령</td> 
+         <td rowspan="3" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsEfYdListGuide')">현행법령(시행일) 목록 조회<br />(국가법령정보센터 기준)</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsEfYdInfoGuide')">현행법령(시행일) 본문 조회<br />(국가법령정보센터 기준)</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsNwListGuide')">현행법령(공포일) 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsNwInfoGuide')">현행법령(공포일) 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsHstListGuide')">법령 연혁 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsHstInfoGuide')">법령 연혁 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조항호목</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">-</td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsEfYdJoListGuide')">현행법령(시행일) 본문 조항호목 조회<br />(국가법령정보센터 기준)</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">-</td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsNwJoListGuide')">현행법령(공포일) 본문 조항호목 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">영문법령</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsEngListGuide')">영문 법령 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsEngInfoGuide')">영문 법령 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="3" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 이력 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsChgListGuide')">법령 변경이력 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsDayJoRvsListGuide')">일자별 조문 개정 이력 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsJoChgListGuide')"> 조문별 변경 이력 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td rowspan="3" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 연계 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsOrdinConListGuide')">법령 기준 자치법규 연계 관련 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsOrdinConGuide')">법령-자치법규 연계현황 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">-</td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsDelegated')">위임법령 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="6" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">부가서비스</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsStmdListGuide')">법령 체계도 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsStmdInfoGuide')">법령 체계도 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('oldAndNewListGuide')">신구법 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('oldAndNewInfoGuide')">신구법 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('thdCmpListGuide')">3단 비교 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('thdCmpInfoGuide')">3단 비교 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsAbrvListGuide')">법률명 약칭 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('datDelHstGuide')">삭제 데이터 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('oneViewListGuide')">한눈보기 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('oneViewInfoGuide')">한눈보기 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정규칙</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('admrulListGuide')">행정규칙 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('admrulInfoGuide')">행정규칙 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">부가서비스</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('admrulOldAndNewListGuide')">행정규칙 신구법 비교 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('admrulOldAndNewInfoGuide')">행정규칙 신구법 비교 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 자치법규 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ordinListGuide')">자치법규 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('ordinInfoGuide')">자치법규 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">연계</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ordinLsConListGuide')"> 자치법규 기준 법령 연계 관련 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">판례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('precListGuide')">판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('precInfoGuide')">판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">헌재결정례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('detcListGuide')">헌재결정례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('detcInfoGuide')">헌재결정례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 법령해석례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('expcListGuide')">법령해석례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('expcInfoGuide')">법령해석례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정심판례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('deccListGuide')">행정심판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('deccInfoGuide')"> 행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="12" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">위원회<br />결정문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">개인정보보호<br />위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ppcListGuide')">개인정보보호위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('ppcInfoGuide')">개인정보보호위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">고용보험심사<br />위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('eiacListGuide')">고용보험심사위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('eiacInfoGuide')">고용보험심사위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">공정거래위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ftcListGuide')">공정거래위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('ftcInfoGuide')">공정거래위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국민권익위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('acrListGuide')">국민권익위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('acrInfoGuide')">국민권익위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">금융위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('fscListGuide')">금융위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('fscInfoGuide')">금융위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">노동위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('nlrcListGuide')">노동위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('nlrcInfoGuide')">노동위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">방송미디어통신<br />위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('kccListGuide')">방송미디어통신위원회<br />결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('kccInfoGuide')">방송미디어통신위원회<br />결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">산업재해보상보험<br />재심사위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('iaciacListGuide')">산업재해보상보험재심사위원회<br />결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('iaciacInfoGuide')">산업재해보상보험재심사위원회<br />결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">중앙토지수용<br />위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ocltListGuide')">중앙토지수용위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('ocltInfoGuide')">중앙토지수용위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">중앙환경분쟁조정<br />위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('eccListGuide')">중앙환경분쟁조정위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('eccInfoGuide')">중앙환경분쟁조정위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">증권선물위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('sfcListGuide')">증권선물위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('sfcInfoGuide')">증권선물위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국가인권위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('nhrckListGuide')">국가인권위원회 결정문 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('nhrckInfoGuide')">국가인권위원회 결정문 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조약</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('trtyListGuide')">조약 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('trtyInfoGuide')">조약 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="3" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">별표ㆍ서식</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsBylListGuide')">법령 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정규칙</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('admrulBylListGuide')">행정규칙 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">자치법규</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('ordinBylListGuide')">자치법규 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">학칙ㆍ공단<br />ㆍ공공기관</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('schlPubRulListGuide')">학칙ㆍ공단ㆍ공공기관 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('schlPubRulInfoGuide')">학칙ㆍ공단ㆍ공공기관 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령용어</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">본문</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsTrmListGuide')">법령 용어 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('lsTrmInfoGuide')">법령 용어 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="12" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 모바일 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobLsListGuide')">법령 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobLsInfoGuide')">법령 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정규칙</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobAdmrulListguide')">행정규칙 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobAdmrulInfoGuide')"> 행정규칙 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">자치법규</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobOrdinListGuide')">자치법규 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobOrdinInfoGuide')">자치법규 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">판례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobPrecListGuide')">판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobPrecInfoGuide')">판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">헌재결정례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobDetcListGuide')">헌재결정례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobDetcInfoGuide')">헌재결정례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령해석례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobExpcListGuide')">법령해석례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobExpcInfoGuide')">법령해석례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정심판례</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobDeccListGuide')">행정심판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobDeccInfoGuide')">행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조약</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobTrtyListGuide')">조약 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('mobTrtyInfoGuide')">조약 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="3" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">별표ㆍ서식</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobLsBylListGuide')"> 법령 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobAdmrulBylListGuide')">행정규칙 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobOrdinBylListGuide')">자치법규 별표ㆍ서식 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령 용어</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('mobLsTrmListGuide')">법령 용어 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td rowspan="6" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">맞춤형</td> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custLsListGuide')">맞춤형 법령 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custLsJoListGuide')">맞춤형 법령 조문 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정규칙</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custAdmrulListGuide')">맞춤형 행정규칙 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custAdmrulJoListGuide')">맞춤형 행정규칙 조문 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">자치법규</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custOrdinListGuide')">맞춤형 자치법규 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('custOrdinJoListGuide')">맞춤형 자치법규 조문 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td rowspan="9" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령정보<br />지식베이스</td> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">용어</td> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lstrmAIGuide')">법령용어 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('dlytrmGuide')">일상용어 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">용어 간 관계</td> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lstrmRltGuide')">법령용어-일상용어 연계 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('dlytrmRltGuide')">일상용어-법령용어 연계 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조문 간 관계</td> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lstrmRltJoGuide')">법령용어-조문 연계 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('joRltLstrmGuide')">조문-법령용어 연계 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법령 간 관계</td> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('lsRltGuide')">관련법령 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="2" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">지능형 법령검색 시스템</td> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('aiSearchGuide')">지능형 법령검색 시스템 검색 API 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td colspan="4" style="border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('aiRltLsGuide')">지능형 법령검색 시스템 연관법령 API 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="39" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">중앙부처<br /> 1차 해석 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">고용노동부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMoelListGuide')">고용노동부 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMoelInfoGuide')">고용노동부 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국토교통부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMolitListGuide')">국토교통부 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMolitInfoGuide')">국토교통부 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">재정경제부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMoefListGuide')">재정경제부 법령해석 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">해양수산부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMofListGuide')">해양수산부 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMofInfoGuide')">해양수산부 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정안전부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMoisListGuide')">행정안전부 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMoisInfoGuide')">행정안전부 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">기후에너지환경부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMeListGuide')">기후에너지환경부 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMeInfoGuide')">기후에너지환경부 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">관세청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKcsListGuide')">관세청 법령해석 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKcsInfoGuide')">관세청 법령해석 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국세청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcNtsListGuide')">국세청 법령해석 목록 조회</a></td> 
+         <td>-</td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">교육부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMoeListGuide')">교육부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMoeInfoGuide')">교육부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">과학기술정보통신부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMsitListGuide')">과학기술정보통신부<br />법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMsitInfoGuide')">과학기술정보통신부<br />법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국가보훈부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMpvaListGuide')">국가보훈부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMpvaInfoGuide')">국가보훈부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국방부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMndListGuide')">국방부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMndInfoGuide')">국방부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">농림축산식품부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMafraListGuide')">농림축산식품부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMafraInfoGuide')">농림축산식품부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">문화체육관광부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMcstListGuide')">문화체육관광부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMcstInfoGuide')">문화체육관광부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법무부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMojListGuide')">법무부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMojInfoGuide')">법무부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">보건복지부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMohwListGuide')">보건복지부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMohwInfoGuide')">보건복지부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">산업통상부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMotieListGuide')">산업통상부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMotieInfoGuide')">산업통상부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">성평등가족부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMogefListGuide')">성평등가족부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMogefInfoGuide')">성평등가족부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">외교부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMofaListGuide')">외교부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMofaInfoGuide')">외교부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">중소벤처기업부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMssListGuide')">중소벤처기업부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMssInfoGuide')">중소벤처기업부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">통일부</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMouListGuide')">통일부 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMouInfoGuide')">통일부 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">법제처</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMolegListGuide')">법제처 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMolegInfoGuide')">법제처 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">식품의약품안전처</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMfdsListGuide')">식품의약품안전처 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMfdsInfoGuide')">식품의약품안전처 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">인사혁신처</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMpmListGuide')">인사혁신처 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMpmInfoGuide')">인사혁신처 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">기상청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKmaListGuide')">기상청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKmaInfoGuide')">기상청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국가유산청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKhsListGuide')">국가유산청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKhsInfoGuide')">국가유산청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">농촌진흥청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcRdaListGuide')">농촌진흥청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcRdaInfoGuide')">농촌진흥청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">경찰청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcNpaListGuide')">경찰청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcNpaInfoGuide')">경찰청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">방위사업청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcDapaListGuide')">방위사업청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcDapaInfoGuide')">방위사업청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">병무청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcMmaListGuide')">병무청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcMmaInfoGuide')">병무청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">산림청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKfsListGuide')">산림청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKfsInfoGuide')">산림청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">소방청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcNfaListGuide')">소방청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcNfaInfoGuide')">소방청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">재외동포청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcOkaListGuide')">재외동포청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcOkaInfoGuide')">재외동포청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조달청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcPpsListGuide')">조달청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcPpsInfoGuide')">조달청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">질병관리청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKdcaListGuide')">질병관리청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKdcaInfoGuide')">질병관리청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국가데이터처</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKostatListGuide')">국가데이터처 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKostatInfoGuide')">국가데이터처 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">지식재산처</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKipoListGuide')">지식재산처 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKipoInfoGuide')">지식재산처 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">해양경찰청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcKcgListGuide')">해양경찰청 법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcKcgInfoGuide')">해양경찰청 법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">행정중심복합도시건설청</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('cgmExpcNaaccListGuide')">행정중심복합도시건설청<br />법령해석 목록</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('cgmExpcNaaccInfoGuide')">행정중심복합도시건설청<br />법령해석 본문</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="4" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"> 특별행정심판 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">조세심판원</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('specialDeccTtListGuide')">조세심판원<br />특별행정심판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('specialDeccTtInfoGuide')">조세심판원<br />특별행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">해양안전심판원</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('specialDeccKmstListGuide')">해양안전심판원<br />특별행정심판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('specialDeccKmstInfoGuide')">해양안전심판원<br />특별행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">국민권익위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('specialDeccAcrListGuide')">국민권익위원회<br />특별행정심판례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('specialDeccAcrInfoGuide')">국민권익위원회<br />특별행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">인사혁신처 소청심사위원회</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('specialDeccAdapListGuide')">인사혁신처 소청심사위원회<br />특별행정심판재결례 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('specialDeccAdapInfoGuide')">인사혁신처 소청심사위원회<br />특별행정심판례 본문 조회</a></td> 
+        </tr> 
+        <tr> 
+         <td rowspan="1" style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">사전컨설팅<br />의견서 </td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;">감사원</td> 
+         <td style="border-right: 1px solid #ccc; border-left: 1px solid #ccc;"><a href="#" onclick="javascript:openApiGuide('baiPvcsListGuide')">감사원 사전컨설팅<br />의견서 목록 조회</a></td> 
+         <td><a href="#" onclick="javascript:openApiGuide('baiPvcsInfoGuide')">감사원 사전컨설팅<br />의견서 본문 조회</a></td> 
+        </tr> 
+       </tbody> 
+      </table> 
+     </div> 
+     <p>※ 체계도 등 부가서비스는 법령서비스 신청을 하면 추가신청 없이 이용가능합니다.</p> 
+    </div>
+    <!-- contents  --> 
+   </div> 
+  </div> 
+  <style>
+#bottom #bottom_wrap .copyright a{
+	text-decoration: underline; color:#096FBA;
+}
+
+#bottom #bottom_wrap .copyright{
+	margin-left: 145px;
+}
+</style> 
+  <!-- footer --> 
+  <div id="bottom"> 
+   <div class="bottom_wrap"> 
+    <div class="go_moleg"> 
+     <a href="javascript:;"><img src="/LSO/images/logo_moleg.gif" alt="법제처" /></a> 
+    </div> 
+    <!-- go_moleg  //--> 
+    <!-- Foot Link --> 
+    <ul class="go_link"> 
+     <li><a href="http://www.law.go.kr/lawPetitionForm.do?menuId=13&amp;subMenuId=79" target="_blank" onkeypress=""><img src="/LSO/images/footmn1.gif" alt="법적효력/저작권" /></a></li> 
+     <li><a href="http://www.law.go.kr/LSW/privacyPolicy.do" target="_blank" title="팝업으로 이동"><img src="/LSO/images/footer-quicmenu031.gif" alt="개인정보처리방침" /></a></li> 
+     <li><a href="/LSO/usr/combineErrorBrdForm.do" title="통합 오류신고"><img src="/LSO/images/footer-quicmenu04.gif" alt="통합 오류신고" /></a></li> 
+    </ul> 
+    <ul class="law_link"> 
+     <li><a href="http://www.moleg.go.kr" target="_blank" onkeypress=""><img src="/LSO/images/foot_logo01.gif" alt="법제처" /></a></li> 
+     <li><a href="http://www.law.go.kr" target="_blank" onkeypress=""><img src="/LSO/images/foot_logo02.gif" alt="국가법령정보센터" /></a></li> 
+    </ul> 
+    <div></div> 
+    <p class="copyright" style="margin-left: 145px;"> (30102) 세종특별자치시 도움5로 20, 정부세종청사 법제처 <br /> [<b>사용신청 및 이용문의 : 02-2109-6446</b>]<br /> Copyright(c) 법제처 All rights reserved. </p> 
+   </div>
+   <!-- bottom_wrap  //--> 
+  </div> 
+  <!-- bottom //--> 
+ </body>
+</html>
