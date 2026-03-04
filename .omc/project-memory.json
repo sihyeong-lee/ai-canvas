@@ -29,6 +29,13 @@
   },
   "customNotes": [],
   "directoryMap": {},
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "OMC-README.md",
+      "accessCount": 1,
+      "lastAccessed": 1772602653793,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }
