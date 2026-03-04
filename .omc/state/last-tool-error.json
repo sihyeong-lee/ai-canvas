@@ -1,0 +1,7 @@
+{
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"/home/user/ai-canvas/_pdf_text/12.노드 모델.txt\"}",
+  "error": "File content (31036 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.",
+  "timestamp": "2026-03-04T06:25:30.520Z",
+  "retry_count": 2
+}
