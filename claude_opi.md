@@ -1,371 +1,942 @@
-# AI Canvas 징계 챗봇 구축 - 종합 가이드 & 워크플로우 리뷰
+# AI Canvas 징계 챗봇 구축 가이드 (Step 1 완전판)
 
-> 본 문서는 프로젝트 전체 문서(징계_챗봇_AI_Canvas_구축계획.md, act.md, manual.md, step1.md)와
-> AI Canvas 공식 PDF 가이드 18종, 법령 API 가이드 HTML 8종, 노동법 RAG 자료를
-> 모두 분석한 결과를 바탕으로 작성되었습니다.
-
----
-
-## Part 1. 현재 구축 계획 리뷰 (잘된 점 / 개선 제안)
-
-### 잘된 점 (그대로 가도 되는 것들)
-
-1. **근거 강제형 아키텍처 설계가 훌륭합니다**
-   - "근거 없는 문장은 출력 차단"이라는 핵심 원칙이 법률 챗봇의 가장 중요한 요구사항을 정확히 충족합니다.
-   - 4개 레이어(입력분석 → 근거수집 → 정합성검사 → 출력강제) 구조가 명확합니다.
-
-2. **Step 1/Step 2 분리 전략이 현명합니다**
-   - Step 1에서 외부 API만으로 안정성 먼저 검증하고
-   - Step 2에서 내부 DB를 붙이는 점진적 접근이 올바릅니다.
-   - 초보자가 한번에 모든 것을 하면 문제 원인 파악이 어렵습니다.
-
-3. **검열 게이트(파이썬_검열게이트) 로직이 정교합니다**
-   - 도메인 화이트리스트, 필수 슬롯 검증, 공식근거 수 카운트 등
-   - 세 가지를 동시에 검사하는 구조가 적절합니다.
-
-4. **데이터 소스 우선순위 정책이 정확합니다**
-   - 공식 법령/판례 > 내부 DB > 일반 문헌 순서가 법적 신뢰성 확보에 필수적입니다.
-
-5. **노동법 RAG PDF는 업로드하지 않고 API만 사용한다는 결정이 옳습니다**
-   - PDF 직접 업로드는 파싱 오류 리스크가 있고, API 조회가 항상 최신 데이터를 보장합니다.
+> 이 문서 하나만 보고 그대로 따라하면 AI Canvas에서 징계 검토 챗봇을 완성할 수 있습니다.
+> 코드·URL·프롬프트 전부 이 문서에 있습니다. 복사-붙여넣기만 하세요.
 
 ---
 
-### 개선 제안 (더 효율적인 워크플로우를 위해)
+## 1. 전체 구조 한눈에 보기
 
-#### 개선 1: 노동위원회 결정문 API 추가 (현재 누락)
-
-**문제**: 현재 법령/판례/행정해석 3개 API만 사용하는데, `nlrc`(노동위원회 결정문) API가 빠져 있습니다.
-
-**이유**: 징계 사건에서 노동위원회 결정문은 매우 중요한 근거입니다. 부당해고/부당징계 구제 신청 결과가 여기에 있습니다.
-
-**해결 방법**:
 ```
-# 노동위 결정문 목록 조회
-https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=nlrc&type=JSON&search=1&query={검색어}
-
-# 노동위 결정문 본문 조회
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=nlrc&type=JSON&ID={결정문ID}
-```
-
-**변경 사항**:
-- Step 1 노드 목록에 `API_노동위목록` (노드 6D)과 `API_노동위본문` (노드 12D) 추가
-- `파이썬_URL생성`에 `nlrc_list_url` 컬럼 추가
-- `파이썬_노동위상세URL` 노드 추가
-- `데이터 연결_근거통합`에 입력4로 연결
-
-#### 개선 2: API 실패 시 재시도 로직 보강
-
-**문제**: `step1.md`에서 "외부 API 장애 시 최대 2회 재시도"라고 했지만, AI Canvas의 커스텀 API 노드에는 자동 재시도 기능이 없습니다.
-
-**해결 방법**: 검열 게이트에서 API 실패를 감지하면, 에이전트 프롬프트를 통해 "다시 시도해주세요"라고 안내하는 것이 현실적입니다. 또는 파이썬 스크립트 노드 내부에서 `urllib`을 이용한 재시도를 구현할 수 있습니다.
-
-```python
-# execute() 내부에서 재시도 구현 예시
-# 주의: AI Canvas에서는 def/return이 차단될 수 있으므로 인라인으로 작성
-import urllib.request
-import time
-
-retry_result = None
-for _retry_i in range(3):
-    try:
-        _req = urllib.request.Request(target_url)
-        with urllib.request.urlopen(_req, timeout=10) as _resp:
-            retry_result = json.loads(_resp.read().decode("utf-8"))
-        break
-    except Exception:
-        if _retry_i < 2:
-            time.sleep(1)
+사용자 입력
+    ↓
+[노드 1] 에이전트  ──→  [노드 2] 에이전트 메시지 가로채기
+                                    ↓
+                    [노드 3] 에이전트 프롬프트_질의정규화  (AI가 질의를 JSON으로 정규화)
+                                    ↓
+                    [노드 4] 파이썬_정규화파싱            (JSON 파싱 → 검색어 추출)
+                                    ↓
+                    [노드 5] 파이썬_URL생성               (API URL 3개 생성)
+                         ↓          ↓          ↓
+              [노드 6]        [노드 7]       [노드 8]
+            API_법령목록    API_판례목록    API_해석목록
+                ↓               ↓              ↓
+         [노드 9]          [노드 10]       [노드 11]
+       파이썬_법령상세URL  파이썬_판례상세URL 파이썬_해석상세URL
+                ↓               ↓              ↓
+         [노드 12]         [노드 13]       [노드 14]
+          API_법령본문      API_판례본문    API_해석본문
+                ↓               ↓              ↓
+                └───────────────┴──────────────┘
+                                ↓
+                [노드 15] 데이터 연결_근거통합
+                                ↓
+                [노드 16] 에이전트 프롬프트_답변생성  (AI가 보고서 작성)
+                                ↓
+                [노드 17] 파이썬_검열게이트           (근거 2건 미만 → 차단)
+                                ↓
+                [노드 18] 데이터 조건 분기
+                    ↓ (통과)            ↓ (차단)
+                    │           [노드 19] 프롬프트_차단응답
+                    └──────────────────┘
+                                ↓
+                [노드 20] 에이전트로 전달
+                                ↓
+                        사용자에게 응답
 ```
 
-**주의**: AI Canvas 파이썬 노드에서 `urllib`이 사용 가능한지 먼저 테스트 필요합니다. 불가능하면 재시도 없이 차단응답으로 처리하세요.
-
-#### 개선 3: 에이전트 프롬프트_질의정규화의 폴백 강화
-
-**문제**: 사용자가 매우 짧거나 모호한 질의를 입력할 때(예: "징계 어떻게 해?") 정규화 품질이 떨어질 수 있습니다.
-
-**해결 방법**: 에이전트 노드의 System Prompt에 "먼저 구체적 사실관계를 물어보라"는 지시를 추가합니다.
-
-```text
-# 에이전트 System Prompt에 추가할 내용
-당신은 징계 검토 전문 AI입니다.
-사용자가 충분한 정보를 제공하지 않으면 아래를 반드시 질문하세요:
-1. 어떤 행위가 문제인가요? (예: 폭언, 무단결근, 횡령 등)
-2. 언제 발생했나요?
-3. 몇 번째 위반인가요? (초범/재범)
-4. 현재 어떤 조치를 원하시나요? (징계 수위 검토, 절차 안내, 판례 조회 등)
-```
-
-#### 개선 4: 크레딧 소모 최적화
-
-**문제**: AI Canvas는 크레딧 제도를 사용합니다. 프롬프트 1행당 1크레딧, 챗 UI 1회당 1크레딧. 현재 설계에서는 1회 질의에 프롬프트 노드 3개(정규화 + 답변생성 + 차단응답)를 사용하므로 비용이 높습니다.
-
-**해결 방법**:
-- `프롬프트_차단응답`(노드 19)은 프롬프트 노드 대신 `파이썬 스크립트`로 대체 가능합니다. 차단 메시지는 고정 템플릿이므로 LLM을 쓸 필요가 없습니다.
-- 이렇게 하면 차단 시 크레딧 1개를 절약합니다.
-
-```python
-# 차단응답을 파이썬으로 대체
-fail_reason = row.get("fail_reason", "알 수 없는 오류")
-blocked_msg = f"""현재 공식근거가 부족하여 결론을 제시하지 않습니다.
-
-추가 사실/기간/키워드가 필요합니다.
-
-불확실/부재 항목: {fail_reason}
-
-더 구체적인 사실관계, 관련 법령명, 또는 시간 범위를 알려주시면 다시 검색하겠습니다."""
-
-row["blocked_answer"] = blocked_msg
-```
-
-#### 개선 5: 응답 출력 템플릿 → 반영 완료
-
-**상태**: manual.md 업데이트에서 이미 반영되었습니다.
-
-**반영된 내용**:
-- 전체 아이콘/기호 포함 템플릿을 프롬프트에 직접 삽입
-- `정보가 없으면 빈칸 대신 반드시 "부재"라고 기재` 규칙 추가
-- Step 1에서 내부DB 미사용이므로 `🏢 내부DB 참고`는 기본적으로 `부재`로 기재하도록 명시
-- 법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지 규칙 포함
-
-이 접근이 올바릅니다. `부재` 명시 규칙 덕분에 모든 섹션을 강제하되, 정보가 없을 때 환각 대신 명확히 부재를 표기하게 됩니다.
+**핵심 원칙**: 공식 법령 API에서 근거를 2건 이상 수집해야만 답변을 출력합니다. 근거가 부족하면 차단 메시지를 반환합니다.
 
 ---
 
-## Part 2. AI Canvas 초보자를 위한 단계별 구축 가이드
+## 2. 시작 전 준비물
 
-### 사전 지식: AI Canvas 핵심 개념 (비개발자용)
-
-#### AI Canvas가 뭔가요?
-- **노코드 플랫폼**입니다. 코딩 없이 블록(노드)을 연결해서 AI 앱을 만듭니다.
-- 레고 블록처럼 노드를 놓고 선으로 연결하면 데이터가 흘러갑니다.
-
-#### 핵심 용어 5가지
-
-| 용어 | 쉬운 설명 | 비유 |
-|------|----------|------|
-| **노드** | 하나의 작업 블록 | 레고 블록 하나 |
-| **엣지** | 노드와 노드를 잇는 선 | 레고 블록을 연결하는 것 |
-| **포트** | 노드의 입구/출구 | 레고의 돌기/홈 |
-| **캔버스** | 노드를 배치하는 작업 공간 | 레고 놀이판 |
-| **워크스페이스** | 캔버스를 모아둔 폴더 | 레고 세트 상자 |
-
-#### 노드의 종류 (우리가 쓸 것만)
-
-| 카테고리 | 노드 이름 | 하는 일 |
-|---------|----------|--------|
-| **UI** | 에이전트 | 사용자와 대화하는 채팅창 |
-| **UI** | 챗 UI | PDF를 참고해서 답변하는 채팅창 |
-| **데이터** | 에이전트 메시지 가로채기 | 사용자 메시지를 가로채서 워크플로우로 보냄 |
-| **데이터** | 에이전트로 전달 | 처리 결과를 사용자에게 돌려보냄 |
-| **데이터** | 데이터 저장소 | 데이터를 캔버스 안에 저장 |
-| **데이터** | 데이터 조건 분기 | 조건에 따라 다른 경로로 보냄 |
-| **API** | 에이전트 프롬프트 | AI에게 지시를 내려서 답변 생성 |
-| **API** | 커스텀 API | 외부 사이트(법령 API 등)에 데이터 요청 |
-| **전처리** | 파이썬 스크립트 | 파이썬 코드로 데이터 가공 |
-| **전처리** | 텍스트 전처리 | 텍스트 정리 (공백 제거 등) |
-| **전처리** | 텍스트 임베딩 | 텍스트를 숫자로 변환 (유사도 검색용) |
-| **배포** | 애플리케이션 | 완성된 앱을 웹으로 배포 |
+| 항목 | 값 | 상태 |
+|------|-----|------|
+| AI Canvas 계정 | 회사 발급 계정 | 로그인 필요 |
+| 법령 API OC 코드 | `tud1211` | 완료 |
+| 테스트 질의 | 아래 10개 준비됨 | 완료 |
 
 ---
 
-### Step 0: 시작 전 준비물
+## 3. 새 캔버스 만들기
 
-| 준비물 | 설명 | 상태 |
-|--------|------|------|
-| AI Canvas 계정 | 회사에서 발급받은 계정 | 필요 |
-| 법령 API OC 코드 | `tud1211` (이미 확보) | 완료 |
-| 테스트 질의 10개 | 징계 관련 질문 10개 준비 | 필요 |
-| 내부 징계 DB (엑셀) | `★징계DB_AI활용 DB최종 작성중.xlsx` | Step 2에서 사용 |
+1. AI Canvas 로그인
+2. 워크스페이스 목록에서 **`+ 새 워크스페이스`** 클릭
+3. 이름 입력: `징계챗봇-Step1`
+4. 빈 캔버스 열림 → 다음 단계 진행
 
 ---
 
-### Step 1: 기본 플로우 만들기 (외부 API만 사용)
+## 4. 노드 배치 순서
 
-#### 1-1. 새 캔버스 만들기
+왼쪽 사이드바에서 노드를 끌어다 캔버스에 놓습니다.
+**왼쪽 → 오른쪽** 순서로 배치하면 보기 좋습니다.
 
-1. AI Canvas에 로그인합니다
-2. 워크스페이스 목록에서 `+ 새 워크스페이스` 클릭
-3. 이름: `징계챗봇-Step1` 입력
-4. 빈 캔버스가 열립니다
+| 순서 | 노드 이름 | 카테고리 |
+|------|----------|---------|
+| 1 | 에이전트 | UI |
+| 2 | 에이전트 메시지 가로채기 | 데이터 |
+| 3 | 에이전트 프롬프트_질의정규화 | API |
+| 4 | 파이썬_정규화파싱 | 전처리 |
+| 5 | 파이썬_URL생성 | 전처리 |
+| 6 | API_법령목록 | API |
+| 7 | API_판례목록 | API |
+| 8 | API_해석목록 | API |
+| 9 | 파이썬_법령상세URL | 전처리 |
+| 10 | 파이썬_판례상세URL | 전처리 |
+| 11 | 파이썬_해석상세URL | 전처리 |
+| 12 | API_법령본문 | API |
+| 13 | API_판례본문 | API |
+| 14 | API_해석본문 | API |
+| 15 | 데이터 연결_근거통합 | 전처리 |
+| 16 | 에이전트 프롬프트_답변생성 | API |
+| 17 | 파이썬_검열게이트 | 전처리 |
+| 18 | 데이터 조건 분기 | 데이터 |
+| 19 | 프롬프트_차단응답 | API |
+| 20 | 에이전트로 전달 | 데이터 |
 
-#### 1-2. 노드 20개 배치하기
+---
 
-왼쪽 사이드바에서 노드를 하나씩 끌어다 캔버스에 놓습니다.
-**순서대로** 왼쪽에서 오른쪽으로 배치하면 보기 좋습니다.
+## 5. 노드별 상세 설정
 
-```
-[배치 순서 - 왼쪽에서 오른쪽으로]
+> **파이썬 노드 공통 주의사항**
+> AI Canvas 파이썬 노드는 `execute()` 함수 내부만 입력 가능합니다.
+> 아래 코드를 **그대로 복사해서 `execute()` 안에 붙여넣으세요.**
+> `def`, `return`, `yield` 키워드는 AI Canvas에서 에러가 나므로 사용하지 않았습니다.
 
-1단계: 대화 입력
-  (1) 에이전트  →  (2) 에이전트 메시지 가로채기
+---
 
-2단계: 질의 분석
-  →  (3) 에이전트 프롬프트_질의정규화
-  →  (4) 파이썬_정규화파싱
-  →  (5) 파이썬_URL생성
+### 노드 1: 에이전트
 
-3단계: 법령/판례 목록 조회 (병렬)
-  →  (6) API_법령목록
-  →  (7) API_판례목록
-  →  (8) API_해석목록
-
-4단계: 상세 URL 생성
-  →  (9) 파이썬_법령상세URL
-  → (10) 파이썬_판례상세URL
-  → (11) 파이썬_해석상세URL
-
-5단계: 본문 조회
-  → (12) API_법령본문
-  → (13) API_판례본문
-  → (14) API_해석본문
-
-6단계: 통합 & 답변
-  → (15) 데이터 연결_근거통합
-  → (16) 에이전트 프롬프트_답변생성
-
-7단계: 검증 & 반환
-  → (17) 파이썬_검열게이트
-  → (18) 데이터 조건 분기
-  → (19) 프롬프트_차단응답 (or 파이썬_차단응답)
-  → (20) 에이전트로 전달
-```
-
-#### 1-3. 노드 연결하기 (엣지 만들기)
-
-노드의 **출력 포트**(오른쪽 동그라미)를 마우스로 잡아서
-다음 노드의 **입력 포트**(왼쪽 동그라미)에 놓으면 연결됩니다.
-
-**핵심 연결 맵:**
-
-```
-에이전트 ──→ 에이전트 메시지 가로채기 ──→ 에이전트 프롬프트_질의정규화
-                                              │
-                                              ▼
-                                    파이썬_정규화파싱
-                                              │
-                                              ▼
-                                    파이썬_URL생성
-                                     │    │    │
-                            ┌────────┘    │    └────────┐
-                            ▼             ▼             ▼
-                    API_법령목록    API_판례목록    API_해석목록
-                            │             │             │
-                            ▼             ▼             ▼
-                    파이썬_법령     파이썬_판례    파이썬_해석
-                    상세URL        상세URL        상세URL
-                            │             │             │
-                            ▼             ▼             ▼
-                    API_법령본문    API_판례본문    API_해석본문
-                            │             │             │
-                            └──────┐      │      ┌──────┘
-                                   ▼      ▼      ▼
-                              데이터 연결_근거통합
-                                        │
-                                        ▼
-                            에이전트 프롬프트_답변생성
-                                        │
-                                        ▼
-                              파이썬_검열게이트
-                                        │
-                                        ▼
-                              데이터 조건 분기
-                                 │            │
-                            [통과]          [차단]
-                                 │            │
-                                 │      프롬프트_차단응답
-                                 │            │
-                                 └──┐    ┌────┘
-                                    ▼    ▼
-                              에이전트로 전달
-```
-
-#### 1-4. 각 노드 설정하기
-
-##### 노드 1: 에이전트
 - **카테고리**: UI > 에이전트
-- **설정**:
-  - 인사말: `징계 검토 요청을 입력하면 공식 법령/판례 근거 기반으로 답변합니다`
-  - 메시지 가로채기 노드: `에이전트 메시지 가로채기` 선택
-  - 웹 검색: 끔 (우리는 공식 API만 사용)
+- **설정 항목**:
 
-##### 파이썬 코드 작성 시 주의 (중요!)
-- AI Canvas 파이썬 노드에서는 **`def`, `return`, `yield` 키워드를 사용하면 에러**가 납니다.
-- 헬퍼 함수를 만들지 말고, 모든 로직을 **인라인**(반복문/조건문 안에 직접 작성)으로 작성하세요.
-- `manual.md`의 최신 코드는 이 규칙을 반영하여 모두 수정되었습니다.
+| 설정 | 값 |
+|------|-----|
+| 인사말 | `징계 검토 요청을 입력하면 공식 법령/판례 근거 기반으로 답변합니다` |
+| 메시지 가로채기 노드 | `에이전트 메시지 가로채기` 선택 |
+| 웹 검색 | **끔** |
 
-##### 노드 3: 에이전트 프롬프트_질의정규화
+---
+
+### 노드 2: 에이전트 메시지 가로채기
+
+- **카테고리**: 데이터 > 에이전트 메시지 가로채기
+- 별도 설정 없음. 노드 1과 노드 3 사이에 연결만 하면 됩니다.
+
+---
+
+### 노드 3: 에이전트 프롬프트_질의정규화
+
 - **카테고리**: API > 에이전트 프롬프트
-- **모델**: 비용-정확도 균형 모델
-- **툴 사용**: 끔
 - **출력 열 이름**: `normalized_json`
-- **프롬프트**: (manual.md의 "노드 3" 프롬프트를 그대로 붙여넣기)
-
-##### 노드 4: 파이썬_정규화파싱
-- **카테고리**: 전처리 > 파이썬 스크립트
-- **코드**: manual.md의 "노드 4" 코드를 `execute()` 함수 내부에만 붙여넣기
-- **주의**: 상단의 `import` 문과 `def execute()` 선언은 AI Canvas가 자동 제공합니다. **중간 코드만** 넣으세요.
-
-##### 노드 5: 파이썬_URL생성
-- **코드**: manual.md의 "노드 5" 코드를 `execute()` 내부에 붙여넣기
-
-##### 노드 6~8: 커스텀 API (법령/판례/해석 목록)
-- **카테고리**: API > 커스텀 API
-- **공통 설정**:
-  - 요청 모드: `데이터셋 요청`
-  - Method: `GET`
-  - 자동 변환(JSON → CSV): `켜짐`
-- **개별 설정**:
-  - 노드 6: URL 컬럼 = `law_list_url`
-  - 노드 7: URL 컬럼 = `prec_list_url`
-  - 노드 8: URL 컬럼 = `expc_list_url`
-
-##### 노드 9~11: 파이썬_상세URL 생성
-- 각각 manual.md의 "노드 9/10/11" 코드를 `execute()` 내부에 붙여넣기
-
-##### 노드 12~14: 커스텀 API (본문 조회)
-- 노드 6~8과 동일한 공통 설정
-- **개별 URL 컬럼**:
-  - 노드 12: `law_detail_url`
-  - 노드 13: `prec_detail_url`
-  - 노드 14: `expc_detail_url`
-
-##### 노드 15: 데이터 연결_근거통합
-- **카테고리**: 전처리 > 데이터 연결
-- **축**: 수직
-- **병합 방식**: 공통 열 사용
-- 3개의 입력(법령본문, 판례본문, 해석본문)을 하나로 합침
-
-##### 노드 16: 에이전트 프롬프트_답변생성
-- **모델**: 비용-정확도 균형 모델
 - **툴 사용**: 끔
-- **출력 열**: `draft_answer`
-- **프롬프트**: manual.md의 "노드 16" 프롬프트 붙여넣기 (아이콘/기호 포함 전체 템플릿)
-- **핵심 규칙**:
-  - 정보가 없으면 빈칸 대신 반드시 `부재`라고 기재
-  - Step 1에서는 `🏢 내부DB 참고`는 기본 `부재` 기재
-  - 법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지
+- **프롬프트** (아래 전체를 복사-붙여넣기):
 
-##### 노드 17: 파이썬_검열게이트
-- manual.md의 "노드 17" 코드를 `execute()` 내부에 붙여넣기
+```
+역할: 징계 사건 입력을 공식 검색용 구조로 정규화
+반드시 JSON만 출력
+스키마:
+{
+  "case_type": "",
+  "issue_keywords": [""],
+  "law_query": "",
+  "precedent_query": "",
+  "interpretation_query": "",
+  "incident_date": "YYYY-MM-DD 또는 빈 문자열",
+  "date_from": "YYYYMMDD 또는 빈 문자열",
+  "date_to": "YYYYMMDD 또는 빈 문자열",
+  "must_have": ["법령명","조문","시행일","법원","선고일","사건번호"]
+}
+규칙:
+- 사용자 입력 의미를 바꾸지 말 것
+- `issue_keywords`는 빈 값 금지(최소 1개)
+- `law_query`, `precedent_query`, `interpretation_query` 중 최소 1개는 채울 것
+- 정보가 부족하면 기본값 `징계` 사용
+- 키워드는 3~7개 권장(최소 1개)
+```
 
-##### 노드 18: 데이터 조건 분기
+---
+
+### 노드 4: 파이썬_정규화파싱
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+
+if "normalized_json" in df.columns:
+    source_col = "normalized_json"
+elif "output_response" in df.columns:
+    source_col = "output_response"
+else:
+    source_col = None
+
+rows = []
+for row in df.to_dict(orient="records"):
+    raw = row.get(source_col, "") if source_col else ""
+    obj = {}
+
+    if isinstance(raw, dict):
+        obj = raw
+    else:
+        text = "" if raw is None else str(raw).strip()
+        if text and text.lower() != "nan":
+            try:
+                obj = json.loads(text)
+            except Exception:
+                m = re.search(r"\{.*\}", text, re.S)
+                if m:
+                    try:
+                        obj = json.loads(m.group(0))
+                    except Exception:
+                        obj = {}
+
+    kws = obj.get("issue_keywords", [])
+    if isinstance(kws, str):
+        kws = [x.strip() for x in re.split(r"[,\s/|]+", kws) if x.strip()]
+    elif isinstance(kws, list):
+        cleaned = []
+        for x in kws:
+            if x is None:
+                continue
+            sx = str(x).strip()
+            if sx and sx.lower() != "nan":
+                cleaned.append(sx)
+        kws = cleaned
+    else:
+        kws = []
+
+    law_query = obj.get("law_query", "")
+    if law_query is None:
+        law_query = ""
+    else:
+        try:
+            if pd.isna(law_query):
+                law_query = ""
+        except Exception:
+            pass
+    law_query = str(law_query).strip()
+    if law_query.lower() == "nan":
+        law_query = ""
+
+    precedent_query = obj.get("precedent_query", "")
+    if precedent_query is None:
+        precedent_query = ""
+    else:
+        try:
+            if pd.isna(precedent_query):
+                precedent_query = ""
+        except Exception:
+            pass
+    precedent_query = str(precedent_query).strip()
+    if precedent_query.lower() == "nan":
+        precedent_query = ""
+
+    interpretation_query = obj.get("interpretation_query", "")
+    if interpretation_query is None:
+        interpretation_query = ""
+    else:
+        try:
+            if pd.isna(interpretation_query):
+                interpretation_query = ""
+        except Exception:
+            pass
+    interpretation_query = str(interpretation_query).strip()
+    if interpretation_query.lower() == "nan":
+        interpretation_query = ""
+
+    if not kws:
+        fallback = " ".join([law_query, precedent_query, interpretation_query]).strip()
+        if not fallback:
+            for k in ["question", "query", "user_query", "user_input", "input_text", "message", "agent_message", "chat_message", "content", "text"]:
+                v = row.get(k, "")
+                if v is None:
+                    v = ""
+                else:
+                    try:
+                        if pd.isna(v):
+                            v = ""
+                    except Exception:
+                        pass
+                v = str(v).strip()
+                if v.lower() == "nan":
+                    v = ""
+                if v and not v.startswith("{"):
+                    fallback = v
+                    break
+        if fallback:
+            toks = [t for t in re.split(r"[,\s/|]+", fallback) if t]
+            kws = []
+            for t in toks:
+                st = str(t).strip()
+                if st and st.lower() != "nan" and len(st) >= 2:
+                    kws.append(st)
+                if len(kws) >= 7:
+                    break
+
+    if not kws:
+        kws = ["징계"]
+
+    seed = " ".join(kws[:3]).strip() or "징계"
+    if not law_query:
+        law_query = seed
+    if not precedent_query:
+        precedent_query = seed
+    if not interpretation_query:
+        interpretation_query = seed
+
+    must_have = obj.get("must_have", [])
+    if isinstance(must_have, str):
+        must_have = [x.strip() for x in must_have.split(",") if x.strip()]
+    elif isinstance(must_have, list):
+        cleaned = []
+        for x in must_have:
+            if x is None:
+                continue
+            sx = str(x).strip()
+            if sx and sx.lower() != "nan":
+                cleaned.append(sx)
+        must_have = cleaned
+    else:
+        must_have = []
+    if not must_have:
+        must_have = ["법령명", "조문", "시행일", "법원", "선고일", "사건번호"]
+
+    date_from = obj.get("date_from", "")
+    if date_from is None:
+        date_from = ""
+    else:
+        try:
+            if pd.isna(date_from):
+                date_from = ""
+        except Exception:
+            pass
+    date_from = str(date_from).strip()
+    if date_from.lower() == "nan":
+        date_from = ""
+
+    date_to = obj.get("date_to", "")
+    if date_to is None:
+        date_to = ""
+    else:
+        try:
+            if pd.isna(date_to):
+                date_to = ""
+        except Exception:
+            pass
+    date_to = str(date_to).strip()
+    if date_to.lower() == "nan":
+        date_to = ""
+
+    rows.append({
+        "issue_keywords_csv": ", ".join(kws),
+        "law_query": law_query,
+        "precedent_query": precedent_query,
+        "interpretation_query": interpretation_query,
+        "date_from": date_from,
+        "date_to": date_to,
+        "must_have": ",".join(must_have),
+    })
+
+result = pd.DataFrame(rows, columns=[
+    "issue_keywords_csv",
+    "law_query",
+    "precedent_query",
+    "interpretation_query",
+    "date_from",
+    "date_to",
+    "must_have",
+])
+```
+
+---
+
+### 노드 5: 파이썬_URL생성
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+base = "https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&type=JSON"
+
+rows = []
+for _, r in df.iterrows():
+    fallback = r.get("issue_keywords_csv", "")
+    if fallback is None:
+        fallback = ""
+    else:
+        try:
+            if pd.isna(fallback):
+                fallback = ""
+        except Exception:
+            pass
+    fallback = str(fallback).strip()
+    if fallback.lower() == "nan" or not fallback:
+        fallback = "징계"
+
+    lq = r.get("law_query", "")
+    if lq is None:
+        lq = ""
+    else:
+        try:
+            if pd.isna(lq):
+                lq = ""
+        except Exception:
+            pass
+    lq = str(lq).strip()
+    if lq.lower() == "nan" or not lq:
+        lq = fallback
+
+    pq = r.get("precedent_query", "")
+    if pq is None:
+        pq = ""
+    else:
+        try:
+            if pd.isna(pq):
+                pq = ""
+        except Exception:
+            pass
+    pq = str(pq).strip()
+    if pq.lower() == "nan" or not pq:
+        pq = fallback
+
+    eq = r.get("interpretation_query", "")
+    if eq is None:
+        eq = ""
+    else:
+        try:
+            if pd.isna(eq):
+                eq = ""
+        except Exception:
+            pass
+    eq = str(eq).strip()
+    if eq.lower() == "nan" or not eq:
+        eq = fallback
+
+    lq_enc = lq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    pq_enc = pq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    eq_enc = eq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+
+    rows.append({
+        "law_query_used": lq,
+        "prec_query_used": pq,
+        "expc_query_used": eq,
+        "law_list_url": f"{base}&target=eflaw&search=1&query={lq_enc}&display=5&page=1&sort=ddes",
+        "prec_list_url": f"{base}&target=prec&search=1&query={pq_enc}&display=5&page=1&sort=ddes",
+        "expc_list_url": f"{base}&target=expc&search=1&query={eq_enc}&display=5&page=1&sort=ddes",
+    })
+
+result = pd.DataFrame(rows, columns=[
+    "law_query_used",
+    "prec_query_used",
+    "expc_query_used",
+    "law_list_url",
+    "prec_list_url",
+    "expc_list_url",
+])
+```
+
+---
+
+### 노드 6: API_법령목록
+
+- **카테고리**: API > 커스텀 API
+- **설정**:
+
+| 설정 | 값 |
+|------|-----|
+| 요청 모드 | 데이터셋 요청 |
+| Method | GET |
+| URL 컬럼 | `law_list_url` |
+| 자동 변환 (JSON → CSV) | **켜짐** |
+
+- **참고 URL 형태** (실제 URL은 노드 5가 자동 생성):
+```
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=eflaw&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+```
+
+---
+
+### 노드 7: API_판례목록
+
+- 노드 6과 동일한 설정
+- **URL 컬럼**: `prec_list_url`
+
+- **참고 URL 형태**:
+```
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=prec&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+```
+
+---
+
+### 노드 8: API_해석목록
+
+- 노드 6과 동일한 설정
+- **URL 컬럼**: `expc_list_url`
+
+- **참고 URL 형태**:
+```
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=expc&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+```
+
+---
+
+### 노드 9: 파이썬_법령상세URL
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- **입력**: 노드 6(API_법령목록) 결과 (ID, MST 컬럼 포함)
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+
+rows = []
+for _, r in df.iterrows():
+    row = r.to_dict()
+    idv = ""
+    for k in ["ID", "id", "법령ID", "law_id"]:
+        if k in row:
+            v = row.get(k, "")
+            if v is None:
+                v = ""
+            else:
+                try:
+                    if pd.isna(v):
+                        v = ""
+                except Exception:
+                    pass
+            v = str(v).strip()
+            if v and v.lower() != "nan":
+                idv = v
+                break
+
+    mstv = ""
+    for k in ["MST", "mst", "법령일련번호"]:
+        if k in row:
+            v = row.get(k, "")
+            if v is None:
+                v = ""
+            else:
+                try:
+                    if pd.isna(v):
+                        v = ""
+                except Exception:
+                    pass
+            v = str(v).strip()
+            if v and v.lower() != "nan":
+                mstv = v
+                break
+
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    mstv_enc = mstv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+
+    if idv:
+        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={idv_enc}&type=JSON"
+    elif mstv:
+        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={mstv_enc}&type=JSON"
+    else:
+        url = ""
+
+    rows.append({"law_detail_url": url})
+
+result = pd.DataFrame(rows, columns=["law_detail_url"])
+```
+
+---
+
+### 노드 10: 파이썬_판례상세URL
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- **입력**: 노드 7(API_판례목록) 결과 (ID 컬럼 포함)
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+
+rows = []
+for _, r in df.iterrows():
+    idv = r.get("ID", "")
+    if idv is None or (hasattr(pd, "isna") and pd.isna(idv)):
+        idv = r.get("id", "")
+    if idv is None:
+        idv = ""
+    else:
+        try:
+            if pd.isna(idv):
+                idv = ""
+        except Exception:
+            pass
+    idv = str(idv).strip()
+    if idv.lower() == "nan":
+        idv = ""
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={idv_enc}&type=JSON" if idv else ""
+    rows.append({"prec_detail_url": url})
+
+result = pd.DataFrame(rows, columns=["prec_detail_url"])
+```
+
+---
+
+### 노드 11: 파이썬_해석상세URL
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- **입력**: 노드 8(API_해석목록) 결과 (ID 컬럼 포함)
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+
+rows = []
+for _, r in df.iterrows():
+    idv = r.get("ID", "")
+    if idv is None or (hasattr(pd, "isna") and pd.isna(idv)):
+        idv = r.get("id", "")
+    if idv is None:
+        idv = ""
+    else:
+        try:
+            if pd.isna(idv):
+                idv = ""
+        except Exception:
+            pass
+    idv = str(idv).strip()
+    if idv.lower() == "nan":
+        idv = ""
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={idv_enc}&type=JSON" if idv else ""
+    rows.append({"expc_detail_url": url})
+
+result = pd.DataFrame(rows, columns=["expc_detail_url"])
+```
+
+---
+
+### 노드 12: API_법령본문
+
+- **카테고리**: API > 커스텀 API
+- **설정** (노드 6과 동일):
+
+| 설정 | 값 |
+|------|-----|
+| 요청 모드 | 데이터셋 요청 |
+| Method | GET |
+| URL 컬럼 | `law_detail_url` |
+| 자동 변환 (JSON → CSV) | **켜짐** |
+
+---
+
+### 노드 13: API_판례본문
+
+- 노드 12와 동일한 설정
+- **URL 컬럼**: `prec_detail_url`
+
+---
+
+### 노드 14: API_해석본문
+
+- 노드 12와 동일한 설정
+- **URL 컬럼**: `expc_detail_url`
+
+---
+
+### 노드 15: 데이터 연결_근거통합
+
+- **카테고리**: 전처리 > 데이터 연결
+- **설정**:
+
+| 설정 | 값 |
+|------|-----|
+| 축 | 수직 |
+| 병합 방식 | 공통 열 사용 |
+| 입력1 | API_법령본문 결과 |
+| 입력2 | API_판례본문 결과 |
+| 입력3 | API_해석본문 결과 |
+
+---
+
+### 노드 16: 에이전트 프롬프트_답변생성
+
+- **카테고리**: API > 에이전트 프롬프트
+- **출력 열 이름**: `draft_answer`
+- **툴 사용**: 끔
+- **프롬프트** (아래 전체를 복사-붙여넣기):
+
+```
+역할: 근거 기반 징계 검토 보고서 작성
+금지: 근거에 없는 단정, 출처 없는 결론
+반드시 아래 템플릿을 제목/순서/아이콘/기호까지 그대로 사용
+정보가 없으면 빈칸 대신 반드시 `부재`라고 기재
+링크는 원문 URL만 허용
+법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지
+Step1에서는 내부DB를 연결하지 않으므로 `🏢 내부DB 참고`는 기본적으로 `부재`로 기재
+
+[🟢 Online Mode | {timestamp}] >
+🔍 Search Strategy >
+> {수집 전략 요약}
+> [🌐 웹 서치 적용: {도메인 목록}]
+
+🧊 사실관계 요약
+- {사용자 진술 요약}
+- {불명확 포인트}
+
+⚖️ 쟁점
+- {쟁점1}
+- {쟁점2}
+
+📚 적용 법령
+- 법령명: {name}
+- 조문: {article}
+- 시행일: {effective_date}
+- 해석 포인트: {point}
+
+🧑‍⚖️ 관련 판례
+- 법원: {court}
+- 선고일: {date}
+- 사건번호: {case_no}
+- 판시요지: {holding}
+- 근거 링크: {url}
+
+🏢 내부DB 참고
+- 사내 규정: {rule_name}
+- 유사 징계사례: {case_id / 요약}
+- 차이점: {difference}
+
+♟️ 종합 판단
+- {종합 의견}
+
+🚀 다음 액션
+- {필요 증거}
+- {문서/절차}
+- {기한}
+
+[불확실/부재]
+- {근거 부족 항목 명시}
+```
+
+---
+
+### 노드 17: 파이썬_검열게이트
+
+- **카테고리**: 전처리 > 파이썬 스크립트
+- 아래 코드를 `execute()` 내부에 복사-붙여넣기:
+
+```python
+df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
+
+allow_hosts = (
+    "law.go.kr",
+    "open.law.go.kr",
+    "portal.scourt.go.kr",
+    "ecfs.scourt.go.kr",
+)
+must_slots = ["법령명", "조문", "시행일", "법원", "선고일", "사건번호"]
+url_re = re.compile(r"https?://[^\s)\]]+")
+
+rows = []
+for _, r in df.iterrows():
+    row = r.to_dict()
+    draft = row.get("draft_answer", row.get("output_response", ""))
+    if draft is None:
+        draft = ""
+    else:
+        try:
+            if pd.isna(draft):
+                draft = ""
+        except Exception:
+            pass
+    draft = str(draft).strip()
+    if draft.lower() == "nan":
+        draft = ""
+
+    raw_urls = row.get("source_urls", "")
+    urls = []
+    if isinstance(raw_urls, list):
+        for u in raw_urls:
+            if u is None:
+                continue
+            try:
+                if pd.isna(u):
+                    continue
+            except Exception:
+                pass
+            su = str(u).strip()
+            if su and su.lower() != "nan":
+                urls.append(su)
+    else:
+        text = raw_urls
+        if text is None:
+            text = ""
+        else:
+            try:
+                if pd.isna(text):
+                    text = ""
+            except Exception:
+                pass
+        text = str(text).strip()
+        if text.lower() == "nan":
+            text = ""
+        if text:
+            if "|" in text:
+                urls = [u.strip() for u in text.split("|") if u.strip()]
+            else:
+                urls = [u.strip() for u in re.split(r"[\s,]+", text) if u.strip().startswith("http")]
+
+    if not urls:
+        urls = url_re.findall(draft)
+
+    official_urls = [u for u in urls if any(h in u for h in allow_hosts)]
+    evidence = len(official_urls)
+    raw_evidence = row.get("official_evidence_count", None)
+    if raw_evidence is not None:
+        try:
+            evidence = int(raw_evidence)
+        except Exception:
+            evidence = len(official_urls)
+
+    bad_domain = any(not any(h in u for h in allow_hosts) for u in urls) if urls else False
+    missing = [s for s in must_slots if s not in draft]
+    is_pass = (evidence >= 2) and (not bad_domain) and (len(missing) == 0)
+
+    reasons = []
+    if evidence < 2:
+        reasons.append("official_evidence_count<2")
+    if bad_domain:
+        reasons.append("domain_not_allowed")
+    if missing:
+        reasons.append("missing_slots:" + ",".join(missing))
+    if not urls:
+        reasons.append("source_urls_missing")
+
+    row["is_pass"] = bool(is_pass)
+    row["official_evidence_count"] = int(evidence)
+    row["fail_reason"] = " / ".join(reasons) if reasons else ""
+    rows.append(row)
+
+result = pd.DataFrame(rows)
+```
+
+---
+
+### 노드 18: 데이터 조건 분기
+
 - **카테고리**: 데이터 > 데이터 조건 분기
-- **조건**: `is_pass` == `true`
-- **참 분기**: 에이전트로 전달
-- **거짓 분기**: 프롬프트_차단응답
+- **설정**:
 
-##### 노드 19: 프롬프트_차단응답
-- manual.md의 "노드 19" 프롬프트 붙여넣기
+| 설정 | 값 |
+|------|-----|
+| 조건 컬럼 | `is_pass` |
+| 조건 | `== true` |
+| 참(True) 출력 | → 노드 20 (에이전트로 전달) |
+| 거짓(False) 출력 | → 노드 19 (프롬프트_차단응답) |
 
-##### 노드 20: 에이전트로 전달
+---
+
+### 노드 19: 프롬프트_차단응답
+
+- **카테고리**: API > 에이전트 프롬프트 (또는 프롬프트)
+- **프롬프트** (아래 전체를 복사-붙여넣기):
+
+```
+다음 3줄을 반드시 포함해 한국어로 짧게 답변하세요.
+1) 현재 공식근거가 부족하여 결론을 제시하지 않습니다
+2) 추가 사실/기간/키워드가 필요합니다
+3) 불확실/부재 항목: {fail_reason}
+```
+
+---
+
+### 노드 20: 에이전트로 전달
+
 - **카테고리**: 데이터 > 에이전트로 전달
-- 참/거짓 분기 모두 이 노드로 들어옴
+- 별도 설정 없음
+- 참 분기(통과): `draft_answer` 컬럼을 응답으로 전달
+- 거짓 분기(차단): 프롬프트_차단응답 출력을 응답으로 전달
 
-#### 1-5. 테스트하기
+---
 
-1. 에이전트 노드를 더블클릭하면 채팅창이 열립니다
-2. 아래 10개 질의를 하나씩 테스트합니다:
+## 6. 포트 연결 맵 (엣지 연결 순서)
+
+노드의 오른쪽 동그라미(출력)를 잡아 다음 노드의 왼쪽 동그라미(입력)에 연결합니다.
+
+| From 노드 | From 포트 | To 노드 | To 포트 |
+|-----------|----------|---------|---------|
+| 에이전트 | 메시지 출력 | 에이전트 메시지 가로채기 | 메시지 입력 |
+| 에이전트 메시지 가로채기 | 가로챈 메시지 | 에이전트 프롬프트_질의정규화 | 프롬프트 입력 |
+| 에이전트 프롬프트_질의정규화 | `normalized_json` | 파이썬_정규화파싱 | 입력 데이터셋 |
+| 파이썬_정규화파싱 | 출력 데이터셋 | 파이썬_URL생성 | 입력 데이터셋 |
+| 파이썬_URL생성 | `law_list_url` | API_법령목록 | URL 컬럼 |
+| 파이썬_URL생성 | `prec_list_url` | API_판례목록 | URL 컬럼 |
+| 파이썬_URL생성 | `expc_list_url` | API_해석목록 | URL 컬럼 |
+| API_법령목록 | 목록 결과 (`ID`, `MST` 포함) | 파이썬_법령상세URL | 입력 데이터셋 |
+| API_판례목록 | 목록 결과 (`ID` 포함) | 파이썬_판례상세URL | 입력 데이터셋 |
+| API_해석목록 | 목록 결과 (`ID` 포함) | 파이썬_해석상세URL | 입력 데이터셋 |
+| 파이썬_법령상세URL | `law_detail_url` | API_법령본문 | URL 컬럼 |
+| 파이썬_판례상세URL | `prec_detail_url` | API_판례본문 | URL 컬럼 |
+| 파이썬_해석상세URL | `expc_detail_url` | API_해석본문 | URL 컬럼 |
+| API_법령본문 | 본문 결과 | 데이터 연결_근거통합 | 입력1 |
+| API_판례본문 | 본문 결과 | 데이터 연결_근거통합 | 입력2 |
+| API_해석본문 | 본문 결과 | 데이터 연결_근거통합 | 입력3 |
+| 데이터 연결_근거통합 | 통합 결과 | 에이전트 프롬프트_답변생성 | 프롬프트 컨텍스트 |
+| 에이전트 프롬프트_답변생성 | `draft_answer` | 파이썬_검열게이트 | 입력 데이터셋 |
+| 파이썬_검열게이트 | `is_pass`, `fail_reason` 포함 결과 | 데이터 조건 분기 | 조건 입력 |
+| 데이터 조건 분기 (참) | `draft_answer` | 에이전트로 전달 | 응답 입력 |
+| 데이터 조건 분기 (거짓) | 분기 트리거 | 프롬프트_차단응답 | 프롬프트 입력 |
+| 프롬프트_차단응답 | 차단 메시지 | 에이전트로 전달 | 응답 입력 |
+
+---
+
+## 7. API URL 전체 목록 (참고용)
+
+> 실제 URL은 파이썬 노드가 자동 생성합니다. 직접 확인하거나 테스트할 때 참고하세요.
+
+### 법령
+
+```
+# 목록 조회 (키워드로 검색)
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=eflaw&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+
+# 본문 조회 (ID로)
+https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={법령ID}&type=JSON
+
+# 본문 조회 (MST로)
+https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={법령일련번호}&type=JSON
+```
+
+### 판례
+
+```
+# 목록 조회
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=prec&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+
+# 본문 조회
+https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={판례ID}&type=JSON
+```
+
+### 행정해석
+
+```
+# 목록 조회
+https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=expc&type=JSON&search=1&query=징계&display=5&page=1&sort=ddes
+
+# 본문 조회
+https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={해석례ID}&type=JSON
+```
+
+---
+
+## 8. 완성 후 테스트
+
+### 테스트 방법
+
+1. 에이전트 노드 더블클릭 → 채팅창 열림
+2. 아래 질의를 하나씩 입력
+
+### 테스트 질의 10개
 
 ```
 테스트 1: 직장 내 괴롭힘 반복 폭언 건 징계 수위 검토해줘
@@ -380,189 +951,65 @@ row["blocked_answer"] = blocked_msg
 테스트 10: 징계위원회 구성 요건
 ```
 
-3. **확인 항목**:
-   - 법령 슬롯(법령명/조문/시행일)이 채워졌는가?
-   - 판례 슬롯(법원/선고일/사건번호)이 채워졌는가?
-   - 근거 부족 시 차단 메시지가 나오는가?
-   - 링크가 `law.go.kr` 도메인인가?
+### 확인 항목
 
-#### 1-6. Step 1 완료 기준
+| 확인 항목 | 정상 | 비정상 |
+|----------|------|--------|
+| 답변에 `📚 적용 법령` 섹션 있음 | ✅ | 없으면 프롬프트 재확인 |
+| 답변에 `법령명`, `조문`, `시행일` 있음 | ✅ | 없으면 API 연결 확인 |
+| 답변에 `🧑‍⚖️ 관련 판례` 섹션 있음 | ✅ | 없으면 API 연결 확인 |
+| 링크가 `law.go.kr` 도메인 | ✅ | 다른 도메인이면 차단 필요 |
+| 근거 부족 시 차단 메시지 출력 | ✅ | 출력 안 되면 노드 18 조건 확인 |
+| 정보 없는 항목이 `부재`로 기재됨 | ✅ | 빈칸이면 프롬프트 재확인 |
 
-| 항목 | 기준 |
+### Step 1 완료 기준
+
+| 기준 | 목표 |
 |------|------|
-| 테스트 10건 중 정상 응답 | 10건 (근거 충족 또는 적절한 차단) |
+| 테스트 10건 중 정상 응답 (통과 또는 적절한 차단) | 10 / 10 |
 | 공식근거 슬롯 누락 | 0건 |
 | 비허용 도메인 URL | 0건 |
 | 차단 규칙 오탐 | 0건 |
 
 ---
 
-### Step 2: 내부 DB 연결 (엑셀 데이터 추가)
-
-> Step 1이 완벽히 통과한 후에만 진행하세요.
-
-#### 2-1. 엑셀 데이터 준비
-
-`★징계DB_AI활용 DB최종 작성중.xlsx` 파일에 아래 시트가 있어야 합니다:
-
-| 시트 | 역할 | 필수 컬럼 |
-|------|------|----------|
-| `Cases` | 사건 메타 | `사건ID*`, `신고요지(주장)*`, `조사결론요약(사실인정)*`, `규정위반 성립여부 판단*`, `징계대상여부(Y/N)*` |
-| `Evidence_Facts` | 증거 요약 | `사건ID*`, `항목ID*`, `항목유형*`, `내용요약*`, `채택여부(Y/N)*` |
-| `Facts` | 요건사실 | `사건ID*`, `사실ID*`, `사실요약*` |
-| `Rules` | 내부 규정 | `규정ID*`, `문서명*` |
-| `Sanction_level` | 징계 레벨 | `징계명`, `Level` |
-
-#### 2-2. 비식별 마스킹 확인
-
-업로드 전 반드시 확인:
-- 성명 → `OOO` 또는 `직원A`
-- 사번 → 삭제 또는 `EMP-001`
-- 연락처 → 삭제
-- 주민등록번호 → 삭제
-
-#### 2-3. 추가 노드
-
-Step 1 플로우에 아래 노드를 추가합니다:
-
-```
-[추가 경로]
-
-파이썬_URL생성 ──→ (기존 법령/판례/해석 API)
-       │
-       └──→ 데이터 저장소 조회_내부DB
-                    │
-                    ▼
-            데이터 연결_근거통합 (기존 노드에 입력4 추가)
-```
-
-- `데이터 저장소`에 엑셀 데이터를 업로드
-- `데이터 저장소 조회`로 키워드 기반 내부 사례 검색
-- 검색 결과를 기존 `근거통합` 노드에 4번째 입력으로 연결
-
-#### 2-4. 검열 게이트 업데이트
-
-내부 evidence를 사용했을 때 `internal_evidence_used=true`와 `internal_evidence_ids`를 출력에 포함하도록 검열 게이트를 수정합니다.
-
----
-
-### Step 3: 앱 배포하기
-
-#### 3-1. 페이지 만들기
-1. **페이지** 노드를 캔버스에 추가
-2. 에이전트 노드를 페이지 안에 드래그
-3. 시각화 노드(질의량 차트 등)도 페이지에 추가
-
-#### 3-2. 애플리케이션 만들기
-1. **애플리케이션** 노드 추가
-2. 탭(메뉴) 생성:
-   - `채팅` → 에이전트 페이지 연결
-   - `통계` → 시각화 페이지 연결
-3. 애플리케이션 제목: `징계 검토 지원 챗봇`
-4. 로고 이미지 설정 (선택)
-
-#### 3-3. 배포하기
-1. **배포** 노드 추가
-2. 애플리케이션 노드 연결
-3. **접근 권한**: `초대받은 사용자만` (내부 시스템이므로)
-4. `배포하기` 클릭
-5. 생성된 링크를 팀원에게 공유
-
----
-
-## Part 3. 주요 API 사용법 요약 (복사-붙여넣기용)
-
-### 법령 조회
-
-```
-# 목록 (키워드 검색)
-https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=eflaw&type=JSON&search=1&query={키워드}&display=5&page=1&sort=ddes
-
-# 본문 (ID로 조회)
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={법령ID}&type=JSON
-
-# 본문 (MST + 시행일 + 조번호로 조회)
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={법령일련번호}&efYd={시행일}&JO={조번호}&type=JSON
-```
-
-### 판례 조회
-
-```
-# 목록
-https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=prec&type=JSON&search=1&query={키워드}&display=5&page=1&sort=ddes
-
-# 본문
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={판례ID}&type=JSON
-```
-
-### 행정해석 조회
-
-```
-# 목록
-https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=expc&type=JSON&search=1&query={키워드}&display=5&page=1&sort=ddes
-
-# 본문
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={해석례ID}&type=JSON
-```
-
-### 노동위원회 결정문 조회 (추가 제안)
-
-```
-# 목록
-https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&target=nlrc&type=JSON&search=1&query={키워드}&display=20&page=1
-
-# 본문
-https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=nlrc&type=JSON&ID={결정문ID}
-```
-
----
-
-## Part 4. 자주 하는 실수 & 해결법
+## 9. 자주 하는 실수 & 해결법
 
 | 실수 | 증상 | 해결법 |
 |------|------|--------|
-| OC 누락 | API 호출 시 빈 결과 반환 | 모든 URL에 `OC=tud1211` 포함 확인 |
-| URL 인코딩 안 함 | 한글 키워드 검색 실패 | 파이썬_URL생성에서 `%20`, `%EA` 등으로 인코딩 |
-| 커스텀 API에서 JSON→CSV 미설정 | 데이터가 다음 노드로 안 넘어감 | `자동 변환(JSON→CSV): 켜짐` 확인 |
-| 파이썬 노드에서 전체 코드 붙여넣기 | 에러 발생 | `execute()` 내부 코드만 붙여넣기 |
-| 파이썬 코드에 `def`/`return` 사용 | 실행 차단 에러 | 헬퍼 함수 없이 인라인으로 작성 (manual.md 최신 코드 참고) |
-| 에이전트 메시지 가로채기 미연결 | 워크플로우가 실행 안 됨 | 에이전트 설정에서 가로채기 노드 선택 |
-| 데이터 조건 분기 조건 오류 | 항상 통과/항상 차단 | `is_pass` 컬럼 값이 boolean인지 확인 |
-| 포트 타입 불일치 | 엣지 연결 안 됨 | 같은 타입의 포트끼리만 연결 가능 |
+| `OC=tud1211` 빠뜨림 | API 호출 결과가 비어 있음 | 노드 5 코드의 `base` URL 확인 |
+| 파이썬 코드를 `execute()` 바깥에 붙여넣음 | 파이썬 노드 에러 | `execute():` 줄 아래 들여쓰기 확인 |
+| 파이썬 코드에 `def` / `return` 사용 | 실행 차단 에러 | 이 문서의 코드는 해당 키워드 없음. 복사 시 수정하지 말 것 |
+| 커스텀 API에서 JSON→CSV 자동변환 끔 | 데이터가 다음 노드로 안 넘어감 | `자동 변환(JSON→CSV): 켜짐` 확인 |
+| 에이전트 메시지 가로채기 미연결 | 워크플로우 실행 안 됨 | 노드 1 설정에서 가로채기 노드 선택 확인 |
+| 데이터 조건 분기 조건 오류 | 항상 통과 또는 항상 차단 | `is_pass` 컬럼값이 boolean인지 확인 |
+| 포트 타입 불일치 | 엣지 연결 안 됨 | 같은 타입 포트끼리만 연결 가능 |
+| URL 컬럼명 오타 | API가 URL을 못 읽음 | `law_list_url`, `prec_list_url`, `expc_list_url` 철자 확인 |
 
 ---
 
-## Part 5. 전체 일정 요약
+## 10. Step 2 예고 (내부 DB 연결)
 
-| 단계 | 기간 | 핵심 작업 | 완료 기준 |
-|------|------|----------|----------|
-| **Step 1** | 1~2주 | 외부 API 연결 + 기본 플로우 | 테스트 10건 통과 |
-| **Step 2** | 1주 | 내부 DB 연결 + RAG | 내부 사례 참조 정상 동작 |
-| **Step 3** | 1주 | 앱 배포 + 권한 설정 | 초대 사용자 접근 확인 |
-| **Step 4** | 1주 | 시범운영 + 튜닝 | 환각 케이스 0건 목표 |
+Step 1이 10건 테스트를 모두 통과한 후 진행합니다.
+
+### 추가할 것
+- `★징계DB_AI활용 DB최종 작성중.xlsx` → 데이터 저장소 노드에 업로드
+- `데이터 저장소 조회` 노드 추가 → 키워드로 내부 사례 검색
+- `데이터 연결_근거통합` 노드에 입력4로 연결
+- 노드 16 프롬프트의 `🏢 내부DB 참고` 섹션이 실제 데이터로 채워짐
+
+### 비식별 마스킹 필수 확인 (업로드 전)
+- 성명 → `OOO` 또는 `직원A`
+- 사번 → 삭제 또는 `EMP-001`
+- 연락처, 주민등록번호 → 삭제
 
 ---
 
-## Part 6. 최종 결론
+## 11. 전체 일정
 
-### 현재 계획서 평가: **90점 - 거의 완벽, 소폭 보강만 필요**
-
-**그대로 가도 되는 것:**
-- 전체 아키텍처 (4레이어 근거 강제형)
-- Step 1/2 분리 전략
-- 검열 게이트 로직
-- 데이터 소스 우선순위
-- 출력 템플릿 구조
-- JSON 입출력 계약
-- 내부 DB 스키마/검증 규칙
-
-**이미 반영된 개선:**
-- 출력 템플릿에 아이콘/기호 포함 전체 템플릿 적용 완료
-- `부재` 명시 규칙으로 환각 방지 강화
-- 파이썬 코드에서 `def`/`return` 제거 → AI Canvas 호환성 확보
-
-**추가 보강하면 좋은 것:**
-1. 노동위원회 결정문 API(`nlrc`) 추가 → 징계 사건 근거 대폭 강화
-2. 차단응답을 파이썬으로 대체 → 크레딧 절약
-3. 에이전트 System Prompt에 사전 질문 로직 추가 → 모호한 질의 방지
-4. API 재시도 로직 검토 → AI Canvas 파이썬 노드에서 가능 여부 확인 후 결정
+| 단계 | 핵심 작업 | 완료 기준 |
+|------|----------|----------|
+| **Step 1** | 외부 API 연결 + 기본 플로우 | 테스트 10건 통과 |
+| **Step 2** | 내부 DB 연결 | 내부 사례 참조 정상 동작 |
+| **Step 3** | 앱 배포 + 권한 설정 | 초대 사용자 접근 확인 |
+| **Step 4** | 시범운영 + 튜닝 | 환각 케이스 0건 목표 |
