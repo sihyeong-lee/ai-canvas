@@ -1,0 +1,117 @@
+캔버스 실습 가이드 3. 대시보드 UI 제작 및 애플리케이션 구축/배포
+3. 대시보드 UI 제작 및 애플리
+케이션 구축/배포
+이번 파트에서는 구축한 모델과 시각화 결과를 활용하여 대시보드 UI를 제작하고, 웹 애플
+리케이션으로 구축 및 배포하는 방법을 학습합니다.
+학습 목표
+대시보드 페이지 구성
+웹 애플리케이션 구축
+애플리케이션 배포 및 공유
+학습 순서
+1. 페이지 구성하기: 대시보드 UI를 구성하고 시각화 노드를 배치합니다.
+2. 애플리케이션 구축: 구성한 페이지를 웹 애플리케이션으로 빌드합니다.
+3. 애플리케이션 배포: 구축한 애플리케이션을 배포하고 공유합니다.
+4. 결과 화면: 배포된 애플리케이션의 최종 결과를 확인합니다.
+26. 2. 12. 오후  3:21 3. 대시보드  UI 제작  및  애플리케이션  구축 / 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application# 학습 - 목표 1/2
+
+26. 2. 12. 오후  3:21 3. 대시보드  UI 제작  및  애플리케이션  구축 / 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application# 학습 - 목표 2/2
+
+캔버스 실습 가이드 3. 대시보드 UI 제작 및 애플리케이션 구축/배포 페이지 구성하기
+페이지 구성하기
+이제 데이터를 시각화해봤으니, 노드들을 활용하여 어플리케이션에서 보여질 대시보드를
+구성해보겠습니다.
+먼저, 왼쪽 바의 'UI'파트에서 '페이지' 노드를 캔버스에 추가합니다.
+06:03
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 1/6
+
+노드들(애플리케이션 등 일부 노드 제외)을 페이지 안에 드래그 앤 드롭하면 노드들이 페이
+지에 추가됩니다. 페이지와 노드들의 사이즈를 조절하며, 앞서 만든 시각화 노드들을 페이
+지 안에 원하는대로 자유롭게 배치합니다.
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 2/6
+
+페이지를 삭제하게 되면 페이지에 추가되었던 모든 노드도 함께 삭제됩니다. 따라서 페이지
+를 삭제할 때, 안에 있는 노드도 함께 삭제하고 싶지 않다면, 페이지 안의 노드에 우클릭한
+후 '분리'를 클릭하여 노드를 페이지로부터 분리해놓아야합니다. 또한, 페이지 내부에서 노
+드끼리 겹치게 되면, 뒷 레이어에 있는 노드들이 앞 레이어의 노드에 가려 보이지도 않고 컨
+트롤할 수도 없게 되는 상황이 있습니다. 이 경우 노드에 우클릭한 후, '정렬'에서 '(맨)앞으
+로','(맨)뒤로'를 클릭하여 새롭게 정렬시킴으로써 밑 레이어에 있는 노드들을 컨트롤할 수
+있습니다.
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 3/6
+
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 4/6
+
+앞서 다뤄봤던 '예측하기', '모델 평가', '특성 중요도' 노드(’예측하기’ input - ‘모델 학습’, ‘모
+델 평가’ input - ‘일괄 예측’, ‘특성 중요도’ input - ‘모델 학습’, ‘일괄 예측’)도 캔버스에 추가
+한 후 페이지에 넣어보겠습니다.
+현재까지 이렇게 세 페이지를 구성해보았습니다.
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 5/6
+
+26. 2. 12. 오후  3:21 페이지  구성하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/configure-page 6/6
+
+캔버스 실습 가이드 3. 대시보드 UI 제작 및 애플리케이션 구축/배포 애플리케이션 구축
+애플리케이션 구축
+이제 페이지들을 애플리케이션에 연결해보겠습니다. 왼쪽 바의 '애플리케이션' 파트의 '애플
+리케이션' 노드를 캔버스에 추가합니다. 현재까지 만든 3개의 페이지를 애플리케이션에 넣
+어야 하니, '애플리케이션' 노드에서 탭을 2개 추가하여 총 3개의 탭을 만들어줍니다.
+02:17
+26. 2. 12. 오후  3:21 애플리케이션  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/build-application 1/4
+
+그리고 애플리케이션 노드를 클릭하고, 오른쪽 창에서 3개 탭의 제목을 1. 모델 성능 2. 세부
+분석 3. 검증 분석으로 지어주겠습니다. 그 후 3개 페이지들의 output을 '애플리케이션' 노드
+의 input으로 넣습니다.
+모델 평가/특성 중요도/예측하기 노드가 담긴 페이지는 '모델 성능', 막대 그래프/박스 플롯/
+산점도 그래프/원 그래프 노드가 담긴 페이지는 '세부 분석', 예측값 비교/데이터 개수/예측
+히스토그램 노드가 담긴 페이지를 '검증 분석' 탭으로 넣어줍니다.
+페이지는 페이지 오른쪽 상단에 초록색 불이 들어와야 애플리케이션과 연결할 수 있는 상태
+입니다. 만약 페이지에 노드를 정상적으로 넣었는데도 초록색 불이 들어오지 않는다면, 페
+이지를 우클릭하여 ‘다시 실행’을 클릭하거나, 노드 중 하나를 '분리'하였다가 다시 페이지에
+넣어보세요. 초록색 불이 들어오지 않는 대개의 경우는 이렇게 함으로써 해결할 수 있습니
+다. 또한, 이해하지 못하는 에러가 발생했을 경우 AI Canvas 사이트 새로고침을 시도해보시
+기 바랍니다.
+26. 2. 12. 오후  3:21 애플리케이션  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/build-application 2/4
+
+현재까지의 캔버스는 아래와 같습니다.
+26. 2. 12. 오후  3:21 애플리케이션  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/build-application 3/4
+
+애플리케이션 노드가 정상 작동하지 않는 것 같다면 노드 우클릭 후 ‘다시 실행’을 클릭해보
+세요.
+26. 2. 12. 오후  3:21 애플리케이션  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/build-application 4/4
+
+캔버스 실습 가이드 3. 대시보드 UI 제작 및 애플리케이션 구축/배포 애플리케이션 배포
+애플리케이션 배포
+이제 애플리케이션 구축이 끝났으니, 애플리케이션을 배포할 차례입니다. 왼쪽 바의 '배포'
+파트에서 '배포' 노드를 캔버스에 추가한 후, '애플리케이션' 노드의 output을 '배포' 노드의
+input으로 넣어줍니다. 그 후 '배포' 노드의 배포하기 버튼을 누르면 웹 애플리케이션과 함께
+링크가 생성됩니다. 링크를 통하여 웹 애플리케이션에 접속할 수 있습니다.
+26. 2. 12. 오후  3:21 애플리케이션  배포  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/deploy-application 1/2
+
+가끔, 캔버스에서 페이지에 정상적으로 들어가있는 노드들이 웹 애플리케이션에 접속했을
+땐 보이지 않는 경우가 있습니다. 이 경우, '배포' 노드의 '배포 중단하기'를 클릭하여 애플리
+케이션을 배포 중단한 후(캔버스 편집은 배포를 중단한 상태에서만 가능합니다), 웹 애플리
+케이션에서 보이지 않던 노드들을 페이지에서 '분리'한 후 다시 페이지에 넣고 웹 애플리케
+이션을 배포해보세요.
+26. 2. 12. 오후  3:21 애플리케이션  배포  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/deploy-application 2/2
+
+캔버스 실습 가이드 3. 대시보드 UI 제작 및 애플리케이션 구축/배포 결과 화면
+결과 화면
+현재까지 만든 캔버스는 다음과 같습니다.
+00:13
+26. 2. 12. 오후  3:21 결과  화면  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/result-screen 1/2
+
+26. 2. 12. 오후  3:21 결과  화면  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/dashboard-ui-application/result-screen 2/2

@@ -1,0 +1,285 @@
+노드 종류 애플리케이션 애플리케이션
+애플리케이션
+애플리케이션을 구성하고 사용자 인터페이스를 제공하는 노드입니다.
+설명
+애플리케이션 노드는 웹 애플리케이션을 구성하고 사용자 인터페이스를 제공합니다. 페이
+지 노드들을 메뉴로 연결하여 완전한 웹 애플리케이션을 만들 수 있습니다.
+배포 노드 연결
+애플리케이션 노드의 출력 포트는 배포 노드와 연결되어야 합니다. 배포 노드와 연결
+해야 실제로 웹 애플리케이션을 배포할 수 있습니다.
+포트 구성
+입력 포트# 
+페이지: 애플리케이션 메뉴에 연결할 페이지
+출력 포트
+배포: 배포 가능한 애플리케이션
+속성(노드에서 설정)
+애플리케이션 노드의 속성은 노드 내부에서 설정할 수 있습니다.
+메뉴 추가
+26. 2. 12. 오후  3:37 애플리케이션  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/application/application 1/3
+
+메뉴 추가 버튼을 클릭하여 메뉴를 추가할 수 있습니다. 각 메뉴에 페이지를 연결할 수 있습
+니다.
+속성(속성 탭)
+애플리케이션 노드를 선택한 후 우측 속성 패널에서 다음 설정을 할 수 있습니다:
+애플리케이션 제목
+애플리케이션의 제목(이름)을 설정합니다.
+페이지 요약
+(준비 중)
+배포 중단하는 경우 보여줄 메시지
+배포 중단하는 경우 보여줄 메시지를 입력합니다.
+오픈 그래프 이미지
+(준비 중)
+로고 이미지
+웹 앱 로고로 사용될 이미지를 업로드합니다.
+헤더 숨기기
+애플리케이션의 헤더를 숨길 수 있습니다.
+AI Canvas 로그인 버튼 숨기기
+AI Canvas 로그인 버튼을 숨길 수 있습니다.
+26. 2. 12. 오후  3:37 애플리케이션  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/application/application 2/3
+
+속성(메뉴 탭)
+메뉴 네비게이션 숨기기
+메뉴 네비게이션을 숨길 수 있습니다.
+메뉴 타입
+메뉴의 타입을 선택할 수 있습니다. 예: 왼쪽 사이드, 카드 형식
+메뉴 순서 변경
+드래그 앤 드롭으로 메뉴 순서를 변경할 수 있습니다.
+메뉴 삭제
+휴지통 아이콘을 클릭하여 메뉴를 삭제할 수 있습니다.
+메뉴 숨기기
+메뉴가 애플리케이션 탭에서는 보이지 않지만, 플로우 이동을 통해 특정 페이지로 이동할
+수 있습니다. 이 기능은 사용자가 직접 메뉴에 접근하지 않도록 설정하면서도, 내부적으로
+는 해당 페이지로의 이동이 가능한 유연한 구조를 제공합니다.
+예제
+26. 2. 12. 오후  3:37 애플리케이션  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/application/application 3/3
+
+노드 종류 배포 데이터셋 API 배포
+데이터셋 API 배포
+생성한 데이터셋을 배포하고 공개적으로 접근 가능하게 만드는 노드입니다.
+설명
+데이터셋 API 배포 노드는 데이터셋을 API 형태로 배포하는 노드입니다.
+배포하기를 클릭하면 데이터셋을 확인할 수 있는 URL이 생성됩니다. 그리고 API를 테스트
+해볼 수 있는 Swagger 문서도 같이 생성됩니다.
+포트 구성
+입력 포트
+데이터셋: 배포할 데이터셋
+출력 포트# 
+없음
+API 키 발급 및 사용
+배포된 API URL을 사용하려면 API 키를 발급해야 합니다.
+API 키 발급하기
+1. API 키 발급 버튼을 클릭합니다.
+2. API 키에 대한 간단한 설명을 키 이름에 입력합니다.
+3. 이 API 키를 사용할 기간을 설정합니다.
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 1/6
+
+4. API 키 발급을 클릭합니다.
+API 키 확인 및 복사
+API 키가 생성되면 이 화면에서만 API 키를 확인할 수 있습니다. 키를 복사합니다.
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 2/6
+
+API 키 사용 방법
+API 키는 Header의 Authorization에 Bearer와 함께 입력합니다.
+API 문서를 통한 테스트
+배포된 API는 Swagger 문서를 통해 테스트할 수 있습니다.
+API 문서 접근
+배포 후 생성된 API 문서 링크로 접근하면 API를 테스트해볼 수 있는 화면이 표시됩니다.
+API 키 인증
+1. Authorize 버튼을 클릭합니다.
+// 예시
+curl -X 'GET' \
+  'https://api.ai-canvas.io/external/dataset/ds_92e955c1/preview?
+page=1&limit=100&sort_order=asc' \
+  -H 'accept: application/json' \
+  -H 'Authorization: Bearer [API KEY]'
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 3/6
+
+2. API Key를 입력할 수 있는 화면이 나타납니다.
+3. 발급받은 키를 입력한 뒤 Authorize를 누릅니다.
+4. 정상적으로 로그인이 완료되면 close를 눌러 화면을 닫습니다.
+API 테스트
+API 문서에서 Try it out 버튼을 클릭하면 API를 시험삼아 테스트해볼 수 있습니다.
+필터링 방법
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 4/6
+
+데이터셋 API 배포는 다양한 필터링 방법을 지원합니다.
+단순 비교
+범위 비교
+문자열 검색
+목록 필터
+NULL 체크
+필터링 연산자
+다음 연산자들을 사용할 수 있습니다:
+eq (=): 같음
+ne: 같지 않음
+gt: 보다 큼
+column_name=value
+또는
+column_name[eq]=value
+age[gte]=25
+price[lt]=1000
+name[contains]=kim
+email[ends_with]=@gmail.com
+city[in]=seoul,busan,daegu
+deleted_at[is_null]=true
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 5/6
+
+gte: 이상
+lt: 보다 작음
+lte: 이하
+contains: 포함
+not_contains: 포함하지 않음
+starts_with: 시작
+ends_with: 종료
+in: 목록 포함
+not_in: 목록 제외
+is_null: NULL 값
+not_null: NULL이 아님
+복합 필터 예시
+여러 필터를 조합하여 사용할 수 있습니다:
+?age[gte]=25&gender=male&city[in]=seoul,busan&name[contains]=kim
+26. 2. 12. 오후  3:37 데이터셋  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/dataset-apideploy 6/6
+
+노드 종류 배포 배포
+배포
+구성된 애플리케이션을 배포하고 공개적으로 접근 가능하게 만드는 노드입니다.
+설명
+배포 노드는 구성된 애플리케이션을 배포하고 공개적으로 접근 가능하게 만듭니다. 애플리
+케이션 노드의 출력 포트를 배포 노드에 연결하여 웹 애플리케이션을 배포할 수 있습니다.
+배포하기를 누르면 공개 접근 링크가 생성되고, 배포 노드와 연결된 모든 노드들이 얼려집
+니다. 배포 중단하기를 누르면 연결된 노드들이 다시 풀립니다.
+포트 구성
+입력 포트
+배포: 배포할 애플리케이션
+출력 포트# 
+없음
+속성
+접근 권한
+배포된 애플리케이션의 접근 권한을 설정할 수 있습니다.
+누구나 접근 가능: 모든 사용자가 접근할 수 있습니다
+로그인한 사용자만: 로그인한 사용자만 접근할 수 있습니다
+26. 2. 12. 오후  3:37 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/publish 1/2
+
+초대받은 사용자만: 초대받은 사용자만 접근할 수 있습니다
+애플리케이션 변경사항 캔버스 반영 허용
+애플리케이션에서 수정하고 캔버스 업데이트 버튼을 누르면 캔버스에도 적용됩니다. 이 옵
+션을 활성화하면 배포된 애플리케이션에서의 변경사항을 캔버스로 반영할 수 있습니다.
+새로고침 시 초기화
+새로고침 시 애플리케이션 상태를 초기화할지 설정할 수 있습니다.
+예제
+26. 2. 12. 오후  3:37 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/publish 2/2
+
+노드 종류 배포 워크플로우 API 배포
+워크플로우 API 배포
+워크플로우를 API로 배포하여 외부에서 호출할 수 있게 만드는 노드입니다.
+설명
+워크플로우 API 배포 노드는 워크플로우를 API로 배포하여 외부에서 HTTP 요청으로 호출할
+수 있게 만드는 노드입니다. 배포된 워크플로우는 REST API 엔드포인트로 제공되며, POST
+요청을 통해 데이터를 전송하고 결과를 받을 수 있습니다.
+워크플로우를 배포하기 전에 API 데이터 노드에서 입력 데이터 구조를 미리 정의해야 합니
+다. API 데이터 노드에서 정의한 구조와 동일한 형식으로 데이터를 전송하면 워크플로우가
+정상적으로 실행됩니다.
+포트 구성
+입력 포트
+데이터셋: 배포할 워크플로우의 최종 출력 데이터셋
+출력 포트
+없음
+배포 및 호출
+배포하기
+배포하기 버튼을 클릭하면 워크플로우가 API로 배포되고, 호출할 수 있는 URL이 생성됩니
+다.
+26. 2. 12. 오후  3:37 워크플로우  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/workflow-apideploy 1/4
+
+API 호출 예시
+배포된 API는 다음과 같이 호출할 수 있습니다:
+cURL
+JavaScript (fetch)
+JavaScript (async/await)
+curl -X POST "https://api.ai-canvas.io/api-
+deploy/NjkwMTk4ZTVmNmExMzEwNzdiNDNkNGFmL25vZGUtYXBpRGVwbG95LXlsdGJteHVsb2dqdn
+\
+  -H "Content-Type: application/json" \
+  -d '{
+   "text": [" 안녕하세요 ?"]
+}'
+fetch(
+  "https://api.ai-canvas.io/api-
+deploy/NjkwMTk4ZTVmNmExMzEwNzdiNDNkNGFmL25vZGUtYXBpRGVwbG95LXlsdGJteHVsb2dqdn
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      text: [" 안녕하세요 ?"],
+    }),
+  }
+)
+  .then((response) => response.json())
+  .then((data) => console.log(data))
+  .catch((error) => console.error("Error:", error));
+async function callAPI() {
+  try {
+    const response = await fetch(
+      "https://api.ai-canvas.io/api-
+deploy/NjkwMTk4ZTVmNmExMzEwNzdiNDNkNGFmL25vZGUtYXBpRGVwbG95LXlsdGJteHVsb2dqdn
+      {
+        method: "POST",
+26. 2. 12. 오후  3:37 워크플로우  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/workflow-apideploy 2/4
+
+요청 Body 구조
+요청 body는 API 데이터 노드에서 정의한 구조와 일치해야 합니다.
+예시:
+워크플로우 구성 예시
+1. API 데이터 노드로 입력 구조 정의
+API 데이터 노드에서 받을 데이터 구조를 정의합니다:
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: [" 안녕하세요 ?"],
+        }),
+      }
+    );
+    const data = await response.json();
+    console.log(data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+callAPI();
+{
+  "text": [" 안녕하세요 ?"]
+}
+{
+  "text": [" 안녕하세요 ?"]
+}
+26. 2. 12. 오후  3:37 워크플로우  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/workflow-apideploy 3/4
+
+2. 워크플로우 구성
+API 데이터 노드 → (데이터 처리 노드들) → 워크플로우 API 배포 노드
+3. 배포 및 호출
+워크플로우 API 배포 노드에서 배포하기를 클릭하여 배포하고, 생성된 URL로 API를 호출합
+니다.
+주의사항
+API 데이터 노드와의 관계
+워크플로우 API 배포 노드로 배포된 워크플로우를 호출할 때는, API 데이터 노드에서
+정의한 데이터 구조와 정확히 일치하는 형식으로 요청 body를 전송해야 합니다.
+배포 중단
+배포를 중단하면 더 이상 외부에서 API를 호출할 수 없습니다.
+26. 2. 12. 오후  3:37 워크플로우  API 배포  | AI Canvas Docs
+https://docs.ai-canvas.io/nodes/deploy/workflow-apideploy 4/4

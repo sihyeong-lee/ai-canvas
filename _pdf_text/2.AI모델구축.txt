@@ -1,0 +1,275 @@
+캔버스 실습 가이드 1. AI 모델 구축
+1. AI 모델 구축
+이번 파트에서는 데이터셋 업로드부터 간단한 데이터 분석/데이터 전처리를 거쳐, AI 모델
+을 학습시킨 후 검증 데이터를 검증하는 작업까지 진행해보겠습니다.
+학습 목표# 
+데이터셋 준비 및 업로드
+탐색적 데이터 분석(EDA)
+데이터 전처리
+AI 모델 학습
+모델 평가 및 검증
+학습 순서
+1. 데이터셋 준비: 예제 데이터셋을 업로드하고 확인합니다.
+2. 탐색적 데이터 분석: 데이터의 특성과 분포를 파악합니다.
+3. 데이터 전처리: 모델 학습에 적합하도록 데이터를 정제합니다.
+4. 데이터 검증: 전처리된 데이터를 검증합니다.
+5. AI 모델 구축: 학습 알고리즘을 선택하고 모델을 학습시킵니다.
+6. 모델 평가: 학습된 모델의 성능을 평가하고 특성 중요도를 확인합니다.
+26. 2. 12. 오후  3:16 1. AI 모델  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction 1/2
+
+16:44
+26. 2. 12. 오후  3:16 1. AI 모델  구축  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 데이터셋 준비 데이터셋 업로드
+데이터셋 업로드
+데이터셋을 업로드하는 방법을 안내합니다.
+00:42
+26. 2. 12. 오후  3:16 데이터셋  업로드  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/dataset-preparation/dataset-upload 1/2
+
+왼쪽 바에서 ‘데이터’ 파트의 ‘예제 데이터’ 노드를 캔버스에 추가합니다. 드래그 앤 드롭으
+로 추가할 수 있습니다. 노드를 클릭하고, 오른쪽에서 ‘회귀’ - ‘Automobile-price’를 선택합
+니다. 이 데이터셋을 통해 자동차의 특성들을 보고 자동차의 가격을 예측하는 AI 모델을 만
+들 것입니다.
+26. 2. 12. 오후  3:16 데이터셋  업로드  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/dataset-preparation/dataset-upload 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 탐색적 데이터 분석 데이터 살펴보기
+데이터 살펴보기
+업로드한 데이터셋을 살펴보는 방법을 안내합니다.
+데이터셋을 올렸으니, 데이터셋이 상태가 괜찮은가, 메꿔줘야할 결측치는 없는가에 대해 탐
+색을 해봐야합니다. 예제 데이터를 우클릭하고, 데이터 보기를 클릭하여 데이터를 살펴보겠
+습니다.
+00:53
+26. 2. 12. 오후  3:16 데이터  살펴보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/exploratory-data-analysis/review-data 1/2
+
+테이블을 보니, 다양한 열들을 확인할 수 있습니다. 자동차 가격을 예측하고 그 결과를 이해
+하기 위해선, 이러한 열들이 자동차의 어떤 특성을 의미하는 것인지 제대로 알 필요가 있습
+니다. make, fuel-type, num-of-doors처럼 한 눈에 봐도 알 수 있는 특성들이 있는가하면,
+normalized-losses, curb-weight과 같이 보통 사람들은 알기 힘든 특성들도 있습니다. 모르
+는 특성들에 대하여 정보 탐색을 통해 지식을 쌓고 이해한다면, 데이터 전처리부터 AI 예측
+결과를 분석하는 과정까지가 훨씬 수월해질 것입니다.
+26. 2. 12. 오후  3:16 데이터  살펴보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/exploratory-data-analysis/review-data 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 탐색적 데이터 분석 결측치 확인하기
+결측치 확인하기
+데이터셋의 결측치를 확인하는 방법을 안내합니다.
+또한, '빈 값(%) 0.01%'로 데이터셋에 결측치가 있는 걸 확인할 수 있습니다. 왼쪽에서 3번째
+열인 normalized-losses에서도 빈 값이 보입니다.
+01:09
+26. 2. 12. 오후  3:17 결측치  확인하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/exploratory-data-analysis/check-missing-values 1/2
+
+행과 열이 꽤 많기 때문에, 전체 열에 대한 결측치 정보를 얻기 위해 '테이블' 옆의 '정보' 탭
+으로 이동해봅니다.
+정보 탭으로 이동해보니, 열마다의 빈 값 개수와 열에 들어가는 데이터 타입이 나옵니다.
+자동차 가격 예측을 하는 데에 있어서 이러한 결측치가 있다면, 인공지능 모델이 예측에 어
+려움을 겪어 모델의 성능이 떨어질 수 있으므로, 이러한 결측치를 처리하도록 합시다.
+결측치가 있을 때 반드시 채우는 것만이 정답은 아닙니다. 상황에 따라 결측치가 포함된 행
+을 삭제하거나, 열 전체를 삭제하는 것이 좋은 선택이 될 수도 있습니다.
+26. 2. 12. 오후  3:17 결측치  확인하기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/exploratory-data-analysis/check-missing-values 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 데이터 전처리 결측치 채우기
+결측치 채우기
+데이터셋의 결측치를 채우는 방법을 안내합니다.
+현재 열려있는 '데이터 보기'를 닫고 캔버스로 돌아와, 왼쪽 바의 '데이터' 파트에서 '결측치
+채우기' 노드를 캔버스에 추가합니다. 그 후 '예제 데이터' 노드와 '결측치 채우기' 노드를 연
+결해줍니다. 정확히는, '예제 데이터' 노드에서는 데이터셋을 output으로 내보내고, 그
+output을 '결측치 채우기' 노드의 input으로 넣어주어 '예제 데이터' 노드에 들어있는 데이터
+셋을 '결측치 채우기' 노드으로 전달하는 것입니다.
+02:37
+26. 2. 12. 오후  3:17 결측치  채우기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/fill-missing-values 1/2
+
+'결측치 채우기' 노드를 클릭하여 오른쪽 설정창에서 기본 모드(전체 열에 적용)와, 열별로
+결측치 처리 설정을 할 수 있습니다. 열마다 결측치를 자동으로 처리하거나, 결측치를 해당
+열에 속한 값들의 평균(Mean)/중앙값(Median)/최빈값(Mode)/고정값(Constant)으로 대체하
+거나, 결측치를 채우지 않고 통과할 수 있습니다. ‘결측치 채우기’ 노드의 디폴트는 기본 모
+드(Auto)이기 때문에, ‘예제 데이터’를 ‘결측치 채우기’에 넣는 순간 결측치가 자동으로 처리
+됩니다.
+'결측치 채우기' 노드를 우클릭하여 데이터 보기를 클릭하면, 이전의 결측치가 채워진 데이
+터셋의 모습을 확인할 수 있습니다.
+26. 2. 12. 오후  3:17 결측치  채우기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/fill-missing-values 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 데이터 전처리 열 선택
+열 선택
+데이터셋에서 필요한 열을 선택하는 방법을 안내합니다.
+그럼 이제 데이터셋의 열을 선택해보겠습니다. 데이터셋의 부분 중 모델의 학습에 사용될
+열을 선택하는 것입니다.
+02:25
+26. 2. 12. 오후  3:17 열  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/select-columns 1/4
+
+우선, 왼쪽 바의 '전처리' 파트에서 '열 선택' 노드를 캔버스에 추가하고, '결측치 채우기' 노
+드의 output을 '열 선택' 노드의 input으로 넣어줍니다.
+이 데이터셋에는 많은 열이 있습니다. 여기서 id_col 열은 그저 데이터의 id를 나타내는 열
+로, 자동차의 특성과 관련이 없어 모델 학습에 도움을 주지 못 합니다. 따라서 우선 다른 특
+성들은 건드리지 않고 id_col의 체크박스를 해제한 후, '적용하기'를 눌러 id_col 열을 데이터
+셋에서 제외시킵니다.
+26. 2. 12. 오후  3:17 열  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/select-columns 2/4
+
+26. 2. 12. 오후  3:17 열  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/select-columns 3/4
+
+자동차 산업 도메인에 관한 지식이 풍부한 사람은 열 선택을 포함한 데이터 전처리를 성공
+적으로 할 수 있을 것입니다. 자동차들의 가격과 각종 특성들에 대해 아는 것이 많기 때문입
+니다. 마찬가지로 어떤 데이터셋을 다루든 해당 분야에 대한 지식이 많을수록 데이터를 전
+처리하기에 유리합니다.
+'열 선택' 노드를 우클릭하고 '데이터 보기'를 클릭하면 id_col 열이 사라진 모습을 확인할 수
+있습니다.
+26. 2. 12. 오후  3:17 열  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-preprocessing/select-columns 4/4
+
+캔버스 실습 가이드 1. AI 모델 구축 AI 모델 구축 데이터 분할
+데이터 분할
+학습용과 테스트용 데이터를 분할하는 방법을 안내합니다.
+이제 AI 모델을 학습시키도록 하겠습니다. 모델 학습에는 1. 학습 데이터셋과 2. 모델에 사용
+될 알고리즘이 필요합니다. 앞으로 우리에게 필요한 데이터셋 종류는, 모델을 학습시킬 때
+사용될 학습 데이터와, 학습된 모델에게 예측을 시킬 때 필요한 검증 데이터입니다. 시험공
+부할 때 나왔던 문제를 시험 때 그대로 주면 안 되듯이, 학습 데이터와 검증 데이터는 겹쳐
+서는 안 됩니다. 따라서 우리는 앞서 열 선택으로 전처리한 데이터셋을 학습 데이터와 검증
+데이터로 나눠주겠습니다.
+01:34
+26. 2. 12. 오후  3:17 데이터  분할  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/split-data 1/2
+
+왼쪽 바의 '데이터' 파트에서 '데이터 분할' 노드를 캔버스에 추가한 후, 열 선택된 데이터셋
+을 input으로 넣어줍니다. 데이터 분할 비율은 기본값인 0.7(70%):0.3(30%)으로 나누어, 데이
+터셋의 70%를 학습 데이터로, 30%를 검증 데이터로 사용하겠습니다. 데이터 분할 방법은
+단순 랜덤으로 합니다.
+26. 2. 12. 오후  3:17 데이터  분할  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/split-data 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 AI 모델 구축 학습 알고리즘 선택
+학습 알고리즘 선택
+적합한 학습 알고리즘을 선택하는 방법을 안내합니다.
+다음은 학습에 사용할 알고리즘을 선택해야 합니다. 회귀 모델을 만들기 위해서 다양한 선
+택지가 있겠지만, 여기서는 가장 기본적인 선형 회귀 알고리즘을 사용하겠습니다. 왼쪽 바
+의 '모델' 파트에서 '선형 회귀' 노드를 캔버스에 추가합니다. 모드는 '단순'으로 설정합니다.
+00:00
+26. 2. 12. 오후  3:18 학습  알고리즘  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/select-learning-algorithm 1/2
+
+26. 2. 12. 오후  3:18 학습  알고리즘  선택  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/select-learning-algorithm 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 AI 모델 구축 모델 학습
+모델 학습
+선택한 알고리즘으로 모델을 학습하는 방법을 안내합니다.
+이제 모델 학습에 사용될 알고리즘과 학습 데이터의 준비가 완료되었으니 모델을 학습시켜
+보겠습니다.
+왼쪽 바의 '모델' 파트에서 '모델 학습' 노드를 캔버스에 추가합니다. 그리고 '데이터 분할' 노
+드와 '선형 회귀' 노드의 output을 '모델 학습' 노드의 input으로 집어넣습니다. '데이터 분할'
+노드를 '모델 학습' 노드와 연결할 때,
+01:21
+26. 2. 12. 오후  3:18 모델  학습  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/train-model 1/4
+
+위와 같은 노드 연결 설정창이 뜨게 됩니다. 앞선 데이터 분할에서 7:3으로 데이터를 분리할
+때, 데이터셋의 7할은 샘플링된 데이터셋이고, 3할은 남은 데이터셋이 됩니다.
+26. 2. 12. 오후  3:18 모델  학습  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/train-model 2/4
+
+앞서 데이터셋의 70%를 학습 데이터로 하기로 했으니, '데이터 분할'의 '데이터셋(샘플링된
+데이터셋)'을 모델 학습의 '데이터셋'에 연결한 후, 설정 저장하기 버튼을 눌러줍니다.
+그 후, '선형 회귀' 노드의 output을 '모델 학습' 노드의 input으로 넣어줍니다.
+이제 모델 학습을 진행할 차례입니다. 앞서 우리는 이 데이터셋으로 자동차의 특성들을 통
+해 자동차의 가격을 예측하는 모델을 만들 것이라고 했습니다. 따라서 AI 모델은 자동차의
+가격인 'price' 열을 예측해야합니다. '모델 학습' 노드를 클릭하고, '대상 레이블 선택'에서
+'price'를 선택합니다. 학습 방법은 단순 학습으로 합니다.
+26. 2. 12. 오후  3:18 모델  학습  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/train-model 3/4
+
+'모델 학습' 노드의 ‘대상 레이블 선택’에 ‘None’만 뜨고 연결한 데이터셋의 열을 선택할 수
+없는 경우, 혹은 '모델 학습' 노드에 '선행 노드의 실행이 완료되어야 합니다'라는 문구가 뜨
+며 모델 학습이 안 되는 경우, ‘모델 학습’에 연결된 노드들 중 일부가 활성화되지 않았을 수
+있습니다. 이 경우 노드 간 연결이 제대로 되어있는지 확인한 후, '데이터 분할', '학습 알고
+리즘', ‘모델 학습’ 노드 중 노드 오른쪽 위 초록불이 없는 노드를 우클릭하고 ‘다시 실행’을
+클릭(노드 새로고침)해봅니다.
+설정이 완료되었으면 노드의 학습하기를 클릭하여 모델 학습을 진행하면 모델 학습이 완료
+됩니다.
+26. 2. 12. 오후  3:18 모델  학습  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/train-model 4/4
+
+캔버스 실습 가이드 1. AI 모델 구축 AI 모델 구축 모델 사용해보기
+모델 사용해보기
+학습한 모델을 사용하는 방법을 안내합니다.
+학습된 모델이 작동하는 것을 확인해봅니다.
+01:05
+26. 2. 12. 오후  3:18 모델  사용해보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/try-model 1/2
+
+왼쪽 바의 'UI' 파트에서 '예측하기' 노드를 캔버스에 추가한 후, '모델 학습' 노드의
+output(학습된 모델)을 '예측하기' 노드의 input으로 넣어줍니다. '예측하기' 노드에서 열별
+로 원하는 값을 넣은 후 예측하기 버튼을 누르면, AI 모델이 예측한 자동차 가격이 노드 오
+른쪽 위의 결과 칸에 나타나게 됩니다. 해당 예측값이 얼마나 정확한지는 모르지만, 우리가
+만든 AI 모델이 정상 작동하고 있다는 것을 확인할 수 있습니다.
+26. 2. 12. 오후  3:18 모델  사용해보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/ai-model-construction/try-model 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 데이터 검증 검증 진행
+검증 진행
+데이터 검증을 진행하는 방법을 안내합니다.
+AI 모델의 작동을 확인했다면 학습된 모델로 검증 데이터를 검증해볼 차례입니다.
+왼쪽 바의 '모델' 파트에서 '일괄 예측' 노드를 캔버스에 추가합니다. '일괄 예측' 노드는 많은
+양의 데이터를 한 번에 검증할 수 있는 노드입니다. 일괄 예측을 진행하기 위해선 1. 학습된
+모델과 2. 예측할 데이터가 필요합니다. 따라서 '모델 학습' 노드의 output(학습된 모델)을
+'일괄 예측' 노드의 '학습된 모델'에, '데이터 분할' 노드의 output(남은 데이터셋)을 '일괄 예
+측' 노드의 '데이터셋'에 넣어줍니다.
+01:34
+26. 2. 12. 오후  3:18 검증  진행  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-validation/proceed-validation 1/2
+
+'일괄 예측' 노드를 우클릭한 후 '데이터 보기'를 클릭하면 모델이 예측한 결과값을 확인할
+수 있습니다.
+검증 데이터의 가장 오른쪽 열에 'scored_price' 열이 새로 생겼고, 자동차마다의 가격 예측
+값이 입력되어있는 것을 확인할 수 있습니다.
+26. 2. 12. 오후  3:18 검증  진행  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/data-validation/proceed-validation 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 모델 평가 모델 평가
+모델 평가
+학습한 모델을 평가하는 방법을 안내합니다.
+일괄 예측을 마쳤다면 모델의 성능을 확인해볼 때입니다. 왼쪽 바의 '평가' 파트에서 '모델
+평가' 노드를 캔버스에 추가한 후, '일괄 예측' 노드의 output(예측 결과가 포함된 데이터셋)
+을 '모델 평가' 노드의 input으로 넣어줍니다.
+00:59
+26. 2. 12. 오후  3:18 모델  평가  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/model-evaluation/model-evaluation-guide 1/2
+
+'모델 평가' 노드를 통해 우리가 생성한 AI 회귀 모델의 평가 지표에 대한 다양한 정보를 확
+인할 수 있습니다. 회귀 모델의 평가 지표에 대해 더 알아보고 싶다면 AI Canvas docs에서
+제공하는 ‘회귀 모델의 평가 지표’ 교육 영상을 참고해주시길 바랍니다.
+26. 2. 12. 오후  3:18 모델  평가  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/model-evaluation/model-evaluation-guide 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 모델 평가 특성 중요도 살펴보기
+특성 중요도 살펴보기
+모델의 특성 중요도를 확인하는 방법을 안내합니다.
+자동차의 특성들 각각이 자동차 가격에 얼마나 영향을 주는지에 대해서도 알아볼 수 있습니
+다.
+01:05
+26. 2. 12. 오후  3:18 특성  중요도  살펴보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/model-evaluation/review-feature-importance 1/2
+
+왼쪽 바 '모델' 파트의 '특성 중요도' 노드를 캔버스에 추가합니다. '모델 학습' 노드의
+output(학습된 모델)과 '일괄 예측' 노드의 output(예측 결과가 포함된 데이터)을 '특성 중요
+도' 노드의 input으로 넣어주면, 자동차 가격 예측에 있어 각 특성들이 가지는 중요도를 확
+인할 수 있습니다.
+26. 2. 12. 오후  3:18 특성  중요도  살펴보기  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/model-evaluation/review-feature-importance 2/2
+
+캔버스 실습 가이드 1. AI 모델 구축 결과 화면
+결과 화면
+AI 모델 구축 과정의 결과를 확인하는 방법을 안내합니다.
+지금까지 만든 캔버스는 다음과 같습니다.
+00:22
+26. 2. 12. 오후  3:19 결과  화면  | AI Canvas Docs
+https://docs.ai-canvas.io/canvas-practice-guide/ai-model-construction/result-screen 1/1
