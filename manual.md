@@ -90,17 +90,53 @@
 ```text
 역할: 근거 기반 징계 검토 보고서 작성
 금지: 근거에 없는 단정, 출처 없는 결론
-반드시 아래 섹션 순서로 작성:
-1) 사실관계 요약
-2) 쟁점
-3) 적용 법령 (법령명/조문/시행일/링크)
-4) 관련 판례 (법원/선고일/사건번호/요지/링크)
-5) 행정해석 (기관/회신일/안건번호 또는 ID/요지/링크)
-6) 잠정 판단
-7) 불확실/부재 항목
-규칙:
-- 법령 1개 + 판례/해석 1개 이상 없으면 잠정 판단 작성 금지
-- 링크는 원문 URL만 허용
+반드시 아래 템플릿을 제목/순서/아이콘/기호까지 그대로 사용
+정보가 없으면 빈칸 대신 반드시 `부재`라고 기재
+링크는 원문 URL만 허용
+법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지
+Step1에서는 내부DB를 연결하지 않으므로 `🏢 내부DB 참고`는 기본적으로 `부재`로 기재
+
+[🟢 Online Mode | {timestamp}] >
+🔍 Search Strategy >
+> {수집 전략 요약}
+> [🌐 웹 서치 적용: {도메인 목록}]
+
+🧊 사실관계 요약
+- {사용자 진술 요약}
+- {불명확 포인트}
+
+⚖️ 쟁점
+- {쟁점1}
+- {쟁점2}
+
+📚 적용 법령
+- 법령명: {name}
+- 조문: {article}
+- 시행일: {effective_date}
+- 해석 포인트: {point}
+
+🧑‍⚖️ 관련 판례
+- 법원: {court}
+- 선고일: {date}
+- 사건번호: {case_no}
+- 판시요지: {holding}
+- 근거 링크: {url}
+
+🏢 내부DB 참고
+- 사내 규정: {rule_name}
+- 유사 징계사례: {case_id / 요약}
+- 차이점: {difference}
+
+♟️ 종합 판단
+- {종합 의견}
+
+🚀 다음 액션
+- {필요 증거}
+- {문서/절차}
+- {기한}
+
+[불확실/부재]
+- {근거 부족 항목 명시}
 ```
 
 ### 노드 19: 프롬프트_차단응답
@@ -121,6 +157,7 @@
 
 ## 7) Python 노드 코드 (AI Canvas 고정 스캐폴드 전용)
 중요: AI Canvas Python 노드는 아래 형식의 상/하단이 고정이며, **`execute()` 함수 내부만 입력 가능**합니다.
+주의: 일부 환경에서는 중간 코드에 `def`, `return`, `yield`가 있으면 실행이 차단됩니다. 아래 중간 코드는 해당 키워드 없이 작성했습니다.
 
 ```python
 import math
@@ -161,59 +198,108 @@ elif "output_response" in df.columns:
 else:
     source_col = None
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _parse_json(raw):
-    if isinstance(raw, dict):
-        return raw
-    text = _s(raw)
-    if not text:
-        return {}
-    try:
-        return json.loads(text)
-    except Exception:
-        m = re.search(r"\{.*\}", text, re.S)
-        if m:
-            try:
-                return json.loads(m.group(0))
-            except Exception:
-                return {}
-    return {}
-
 rows = []
 for row in df.to_dict(orient="records"):
-    obj = _parse_json(row.get(source_col, "") if source_col else "")
+    raw = row.get(source_col, "") if source_col else ""
+    obj = {}
+
+    if isinstance(raw, dict):
+        obj = raw
+    else:
+        text = "" if raw is None else str(raw).strip()
+        if text and text.lower() != "nan":
+            try:
+                obj = json.loads(text)
+            except Exception:
+                m = re.search(r"\{.*\}", text, re.S)
+                if m:
+                    try:
+                        obj = json.loads(m.group(0))
+                    except Exception:
+                        obj = {}
 
     kws = obj.get("issue_keywords", [])
     if isinstance(kws, str):
         kws = [x.strip() for x in re.split(r"[,\s/|]+", kws) if x.strip()]
-    elif not isinstance(kws, list):
+    elif isinstance(kws, list):
+        cleaned = []
+        for x in kws:
+            if x is None:
+                continue
+            sx = str(x).strip()
+            if sx and sx.lower() != "nan":
+                cleaned.append(sx)
+        kws = cleaned
+    else:
         kws = []
-    kws = [_s(x) for x in kws if _s(x)]
 
-    law_query = _s(obj.get("law_query", ""))
-    precedent_query = _s(obj.get("precedent_query", ""))
-    interpretation_query = _s(obj.get("interpretation_query", ""))
+    law_query = obj.get("law_query", "")
+    if law_query is None:
+        law_query = ""
+    else:
+        try:
+            if pd.isna(law_query):
+                law_query = ""
+        except Exception:
+            pass
+    law_query = str(law_query).strip()
+    if law_query.lower() == "nan":
+        law_query = ""
+
+    precedent_query = obj.get("precedent_query", "")
+    if precedent_query is None:
+        precedent_query = ""
+    else:
+        try:
+            if pd.isna(precedent_query):
+                precedent_query = ""
+        except Exception:
+            pass
+    precedent_query = str(precedent_query).strip()
+    if precedent_query.lower() == "nan":
+        precedent_query = ""
+
+    interpretation_query = obj.get("interpretation_query", "")
+    if interpretation_query is None:
+        interpretation_query = ""
+    else:
+        try:
+            if pd.isna(interpretation_query):
+                interpretation_query = ""
+        except Exception:
+            pass
+    interpretation_query = str(interpretation_query).strip()
+    if interpretation_query.lower() == "nan":
+        interpretation_query = ""
 
     if not kws:
         fallback = " ".join([law_query, precedent_query, interpretation_query]).strip()
         if not fallback:
             for k in ["question", "query", "user_query", "user_input", "input_text", "message", "agent_message", "chat_message", "content", "text"]:
-                v = _s(row.get(k, ""))
+                v = row.get(k, "")
+                if v is None:
+                    v = ""
+                else:
+                    try:
+                        if pd.isna(v):
+                            v = ""
+                    except Exception:
+                        pass
+                v = str(v).strip()
+                if v.lower() == "nan":
+                    v = ""
                 if v and not v.startswith("{"):
                     fallback = v
                     break
         if fallback:
-            kws = [t for t in re.split(r"[,\s/|]+", fallback) if t]
-            kws = [k for k in kws if len(k) >= 2][:7]
+            toks = [t for t in re.split(r"[,\s/|]+", fallback) if t]
+            kws = []
+            for t in toks:
+                st = str(t).strip()
+                if st and st.lower() != "nan" and len(st) >= 2:
+                    kws.append(st)
+                if len(kws) >= 7:
+                    break
 
     if not kws:
         kws = ["징계"]
@@ -229,19 +315,53 @@ for row in df.to_dict(orient="records"):
     must_have = obj.get("must_have", [])
     if isinstance(must_have, str):
         must_have = [x.strip() for x in must_have.split(",") if x.strip()]
-    elif not isinstance(must_have, list):
+    elif isinstance(must_have, list):
+        cleaned = []
+        for x in must_have:
+            if x is None:
+                continue
+            sx = str(x).strip()
+            if sx and sx.lower() != "nan":
+                cleaned.append(sx)
+        must_have = cleaned
+    else:
         must_have = []
-    must_have = [_s(x) for x in must_have if _s(x)]
     if not must_have:
         must_have = ["법령명", "조문", "시행일", "법원", "선고일", "사건번호"]
+
+    date_from = obj.get("date_from", "")
+    if date_from is None:
+        date_from = ""
+    else:
+        try:
+            if pd.isna(date_from):
+                date_from = ""
+        except Exception:
+            pass
+    date_from = str(date_from).strip()
+    if date_from.lower() == "nan":
+        date_from = ""
+
+    date_to = obj.get("date_to", "")
+    if date_to is None:
+        date_to = ""
+    else:
+        try:
+            if pd.isna(date_to):
+                date_to = ""
+        except Exception:
+            pass
+    date_to = str(date_to).strip()
+    if date_to.lower() == "nan":
+        date_to = ""
 
     rows.append({
         "issue_keywords_csv": ", ".join(kws),
         "law_query": law_query,
         "precedent_query": precedent_query,
         "interpretation_query": interpretation_query,
-        "date_from": _s(obj.get("date_from", "")),
-        "date_to": _s(obj.get("date_to", "")),
+        "date_from": date_from,
+        "date_to": date_to,
         "must_have": ",".join(must_have),
     })
 
@@ -261,41 +381,71 @@ result = pd.DataFrame(rows, columns=[
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 base = "https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&type=JSON"
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _enc(s):
-    t = _s(s)
-    return (
-        t.replace("%", "%25")
-         .replace(" ", "%20")
-         .replace("#", "%23")
-         .replace("&", "%26")
-         .replace("+", "%2B")
-    )
-
 rows = []
 for _, r in df.iterrows():
-    fallback = _s(r.get("issue_keywords_csv", "")) or "징계"
+    fallback = r.get("issue_keywords_csv", "")
+    if fallback is None:
+        fallback = ""
+    else:
+        try:
+            if pd.isna(fallback):
+                fallback = ""
+        except Exception:
+            pass
+    fallback = str(fallback).strip()
+    if fallback.lower() == "nan" or not fallback:
+        fallback = "징계"
 
-    lq = _s(r.get("law_query", "")) or fallback
-    pq = _s(r.get("precedent_query", "")) or fallback
-    eq = _s(r.get("interpretation_query", "")) or fallback
+    lq = r.get("law_query", "")
+    if lq is None:
+        lq = ""
+    else:
+        try:
+            if pd.isna(lq):
+                lq = ""
+        except Exception:
+            pass
+    lq = str(lq).strip()
+    if lq.lower() == "nan" or not lq:
+        lq = fallback
+
+    pq = r.get("precedent_query", "")
+    if pq is None:
+        pq = ""
+    else:
+        try:
+            if pd.isna(pq):
+                pq = ""
+        except Exception:
+            pass
+    pq = str(pq).strip()
+    if pq.lower() == "nan" or not pq:
+        pq = fallback
+
+    eq = r.get("interpretation_query", "")
+    if eq is None:
+        eq = ""
+    else:
+        try:
+            if pd.isna(eq):
+                eq = ""
+        except Exception:
+            pass
+    eq = str(eq).strip()
+    if eq.lower() == "nan" or not eq:
+        eq = fallback
+
+    lq_enc = lq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    pq_enc = pq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    eq_enc = eq.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
 
     rows.append({
         "law_query_used": lq,
         "prec_query_used": pq,
         "expc_query_used": eq,
-        "law_list_url": f"{base}&target=eflaw&search=1&query={_enc(lq)}&display=5&page=1&sort=ddes",
-        "prec_list_url": f"{base}&target=prec&search=1&query={_enc(pq)}&display=5&page=1&sort=ddes",
-        "expc_list_url": f"{base}&target=expc&search=1&query={_enc(eq)}&display=5&page=1&sort=ddes",
+        "law_list_url": f"{base}&target=eflaw&search=1&query={lq_enc}&display=5&page=1&sort=ddes",
+        "prec_list_url": f"{base}&target=prec&search=1&query={pq_enc}&display=5&page=1&sort=ddes",
+        "expc_list_url": f"{base}&target=expc&search=1&query={eq_enc}&display=5&page=1&sort=ddes",
     })
 
 result = pd.DataFrame(rows, columns=[
@@ -312,44 +462,50 @@ result = pd.DataFrame(rows, columns=[
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _enc(s):
-    t = _s(s)
-    return (
-        t.replace("%", "%25")
-         .replace(" ", "%20")
-         .replace("#", "%23")
-         .replace("&", "%26")
-         .replace("+", "%2B")
-    )
-
-def _pick(row, keys):
-    for k in keys:
-        if k in row:
-            v = _s(row.get(k, ""))
-            if v:
-                return v
-    return ""
-
 rows = []
 for _, r in df.iterrows():
     row = r.to_dict()
-    idv = _pick(row, ["ID", "id", "법령ID", "law_id"])
-    mstv = _pick(row, ["MST", "mst", "법령일련번호"])
+    idv = ""
+    for k in ["ID", "id", "법령ID", "law_id"]:
+        if k in row:
+            v = row.get(k, "")
+            if v is None:
+                v = ""
+            else:
+                try:
+                    if pd.isna(v):
+                        v = ""
+                except Exception:
+                    pass
+            v = str(v).strip()
+            if v and v.lower() != "nan":
+                idv = v
+                break
+
+    mstv = ""
+    for k in ["MST", "mst", "법령일련번호"]:
+        if k in row:
+            v = row.get(k, "")
+            if v is None:
+                v = ""
+            else:
+                try:
+                    if pd.isna(v):
+                        v = ""
+                except Exception:
+                    pass
+            v = str(v).strip()
+            if v and v.lower() != "nan":
+                mstv = v
+                break
+
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    mstv_enc = mstv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
 
     if idv:
-        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={_enc(idv)}&type=JSON"
+        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={idv_enc}&type=JSON"
     elif mstv:
-        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={_enc(mstv)}&type=JSON"
+        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={mstv_enc}&type=JSON"
     else:
         url = ""
 
@@ -362,30 +518,24 @@ result = pd.DataFrame(rows, columns=["law_detail_url"])
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _enc(s):
-    t = _s(s)
-    return (
-        t.replace("%", "%25")
-         .replace(" ", "%20")
-         .replace("#", "%23")
-         .replace("&", "%26")
-         .replace("+", "%2B")
-    )
-
 rows = []
 for _, r in df.iterrows():
-    idv = _s(r.get("ID", "")) or _s(r.get("id", ""))
-    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={_enc(idv)}&type=JSON" if idv else ""
+    idv = r.get("ID", "")
+    if idv is None or (hasattr(pd, "isna") and pd.isna(idv)):
+        idv = r.get("id", "")
+    if idv is None:
+        idv = ""
+    else:
+        try:
+            if pd.isna(idv):
+                idv = ""
+        except Exception:
+            pass
+    idv = str(idv).strip()
+    if idv.lower() == "nan":
+        idv = ""
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={idv_enc}&type=JSON" if idv else ""
     rows.append({"prec_detail_url": url})
 
 result = pd.DataFrame(rows, columns=["prec_detail_url"])
@@ -395,30 +545,24 @@ result = pd.DataFrame(rows, columns=["prec_detail_url"])
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _enc(s):
-    t = _s(s)
-    return (
-        t.replace("%", "%25")
-         .replace(" ", "%20")
-         .replace("#", "%23")
-         .replace("&", "%26")
-         .replace("+", "%2B")
-    )
-
 rows = []
 for _, r in df.iterrows():
-    idv = _s(r.get("ID", "")) or _s(r.get("id", ""))
-    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={_enc(idv)}&type=JSON" if idv else ""
+    idv = r.get("ID", "")
+    if idv is None or (hasattr(pd, "isna") and pd.isna(idv)):
+        idv = r.get("id", "")
+    if idv is None:
+        idv = ""
+    else:
+        try:
+            if pd.isna(idv):
+                idv = ""
+        except Exception:
+            pass
+    idv = str(idv).strip()
+    if idv.lower() == "nan":
+        idv = ""
+    idv_enc = idv.replace("%", "%25").replace(" ", "%20").replace("#", "%23").replace("&", "%26").replace("+", "%2B")
+    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={idv_enc}&type=JSON" if idv else ""
     rows.append({"expc_detail_url": url})
 
 result = pd.DataFrame(rows, columns=["expc_detail_url"])
@@ -437,33 +581,49 @@ allow_hosts = (
 must_slots = ["법령명", "조문", "시행일", "법원", "선고일", "사건번호"]
 url_re = re.compile(r"https?://[^\s)\]]+")
 
-def _s(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    return str(v).strip()
-
-def _to_int(v, default=0):
-    try:
-        return int(v)
-    except Exception:
-        return default
-
 rows = []
 for _, r in df.iterrows():
     row = r.to_dict()
-    draft = _s(row.get("draft_answer", row.get("output_response", "")))
+    draft = row.get("draft_answer", row.get("output_response", ""))
+    if draft is None:
+        draft = ""
+    else:
+        try:
+            if pd.isna(draft):
+                draft = ""
+        except Exception:
+            pass
+    draft = str(draft).strip()
+    if draft.lower() == "nan":
+        draft = ""
 
     raw_urls = row.get("source_urls", "")
     urls = []
     if isinstance(raw_urls, list):
-        urls = [_s(u) for u in raw_urls if _s(u)]
+        for u in raw_urls:
+            if u is None:
+                continue
+            try:
+                if pd.isna(u):
+                    continue
+            except Exception:
+                pass
+            su = str(u).strip()
+            if su and su.lower() != "nan":
+                urls.append(su)
     else:
-        text = _s(raw_urls)
+        text = raw_urls
+        if text is None:
+            text = ""
+        else:
+            try:
+                if pd.isna(text):
+                    text = ""
+            except Exception:
+                pass
+        text = str(text).strip()
+        if text.lower() == "nan":
+            text = ""
         if text:
             if "|" in text:
                 urls = [u.strip() for u in text.split("|") if u.strip()]
@@ -474,7 +634,13 @@ for _, r in df.iterrows():
         urls = url_re.findall(draft)
 
     official_urls = [u for u in urls if any(h in u for h in allow_hosts)]
-    evidence = _to_int(row.get("official_evidence_count", len(official_urls)), len(official_urls))
+    evidence = len(official_urls)
+    raw_evidence = row.get("official_evidence_count", None)
+    if raw_evidence is not None:
+        try:
+            evidence = int(raw_evidence)
+        except Exception:
+            evidence = len(official_urls)
 
     bad_domain = any(not any(h in u for h in allow_hosts) for u in urls) if urls else False
     missing = [s for s in must_slots if s not in draft]
