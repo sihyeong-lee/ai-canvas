@@ -31,6 +31,12 @@
   "directoryMap": {},
   "hotPaths": [
     {
+      "path": "claude_opi.md",
+      "accessCount": 11,
+      "lastAccessed": 1772606437450,
+      "type": "file"
+    },
+    {
       "path": "",
       "accessCount": 4,
       "lastAccessed": 1772605214438,
@@ -44,8 +50,8 @@
     },
     {
       "path": "manual.md",
-      "accessCount": 2,
-      "lastAccessed": 1772606082250,
+      "accessCount": 3,
+      "lastAccessed": 1772606326641,
       "type": "file"
     },
     {
@@ -244,12 +250,6 @@
       "path": "labor_law_seed_urls_14.txt",
       "accessCount": 1,
       "lastAccessed": 1772605594008,
-      "type": "file"
-    },
-    {
-      "path": "claude_opi.md",
-      "accessCount": 1,
-      "lastAccessed": 1772605839313,
       "type": "file"
     }
   ],

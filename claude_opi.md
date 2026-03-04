@@ -62,19 +62,20 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=nlrc&type=JSON&ID={결
 
 ```python
 # execute() 내부에서 재시도 구현 예시
+# 주의: AI Canvas에서는 def/return이 차단될 수 있으므로 인라인으로 작성
 import urllib.request
 import time
 
-def fetch_with_retry(url, max_retries=2):
-    for i in range(max_retries + 1):
-        try:
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception:
-            if i < max_retries:
-                time.sleep(1)
-    return None
+retry_result = None
+for _retry_i in range(3):
+    try:
+        _req = urllib.request.Request(target_url)
+        with urllib.request.urlopen(_req, timeout=10) as _resp:
+            retry_result = json.loads(_resp.read().decode("utf-8"))
+        break
+    except Exception:
+        if _retry_i < 2:
+            time.sleep(1)
 ```
 
 **주의**: AI Canvas 파이썬 노드에서 `urllib`이 사용 가능한지 먼저 테스트 필요합니다. 불가능하면 재시도 없이 차단응답으로 처리하세요.
@@ -117,22 +118,17 @@ blocked_msg = f"""현재 공식근거가 부족하여 결론을 제시하지 않
 row["blocked_answer"] = blocked_msg
 ```
 
-#### 개선 5: 응답 출력 템플릿의 간소화 검토
+#### 개선 5: 응답 출력 템플릿 → 반영 완료
 
-**문제**: 현재 출력 템플릿이 매우 상세합니다(모드 배너, 검색 전략, 사실관계, 쟁점, 법령, 판례, 내부DB, 종합판단, 다음액션, 불확실). 초기 단계에서 모든 섹션을 강제하면 답변 생성 실패율이 높아질 수 있습니다.
+**상태**: manual.md 업데이트에서 이미 반영되었습니다.
 
-**해결 방법**: Step 1에서는 핵심 4개 섹션만 강제하고, 나머지는 선택으로 둡니다.
+**반영된 내용**:
+- 전체 아이콘/기호 포함 템플릿을 프롬프트에 직접 삽입
+- `정보가 없으면 빈칸 대신 반드시 "부재"라고 기재` 규칙 추가
+- Step 1에서 내부DB 미사용이므로 `🏢 내부DB 참고`는 기본적으로 `부재`로 기재하도록 명시
+- 법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지 규칙 포함
 
-| 섹션 | Step 1 | Step 2 |
-|------|--------|--------|
-| 사실관계 요약 | 필수 | 필수 |
-| 적용 법령 | 필수 | 필수 |
-| 관련 판례/해석 | 필수 | 필수 |
-| 불확실/부재 | 필수 | 필수 |
-| 쟁점 | 선택 | 필수 |
-| 내부DB 참고 | 미사용 | 필수 |
-| 종합 판단 | 선택 | 필수 |
-| 다음 액션 | 선택 | 필수 |
+이 접근이 올바릅니다. `부재` 명시 규칙 덕분에 모든 섹션을 강제하되, 정보가 없을 때 환각 대신 명확히 부재를 표기하게 됩니다.
 
 ---
 
@@ -293,6 +289,11 @@ row["blocked_answer"] = blocked_msg
   - 메시지 가로채기 노드: `에이전트 메시지 가로채기` 선택
   - 웹 검색: 끔 (우리는 공식 API만 사용)
 
+##### 파이썬 코드 작성 시 주의 (중요!)
+- AI Canvas 파이썬 노드에서는 **`def`, `return`, `yield` 키워드를 사용하면 에러**가 납니다.
+- 헬퍼 함수를 만들지 말고, 모든 로직을 **인라인**(반복문/조건문 안에 직접 작성)으로 작성하세요.
+- `manual.md`의 최신 코드는 이 규칙을 반영하여 모두 수정되었습니다.
+
 ##### 노드 3: 에이전트 프롬프트_질의정규화
 - **카테고리**: API > 에이전트 프롬프트
 - **모델**: 비용-정확도 균형 모델
@@ -339,7 +340,11 @@ row["blocked_answer"] = blocked_msg
 - **모델**: 비용-정확도 균형 모델
 - **툴 사용**: 끔
 - **출력 열**: `draft_answer`
-- **프롬프트**: manual.md의 "노드 16" 프롬프트 붙여넣기
+- **프롬프트**: manual.md의 "노드 16" 프롬프트 붙여넣기 (아이콘/기호 포함 전체 템플릿)
+- **핵심 규칙**:
+  - 정보가 없으면 빈칸 대신 반드시 `부재`라고 기재
+  - Step 1에서는 `🏢 내부DB 참고`는 기본 `부재` 기재
+  - 법령 1개 + 판례/해석 1개 이상 없으면 `♟️ 종합 판단` 작성 금지
 
 ##### 노드 17: 파이썬_검열게이트
 - manual.md의 "노드 17" 코드를 `execute()` 내부에 붙여넣기
@@ -520,6 +525,7 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=nlrc&type=JSON&ID={결
 | URL 인코딩 안 함 | 한글 키워드 검색 실패 | 파이썬_URL생성에서 `%20`, `%EA` 등으로 인코딩 |
 | 커스텀 API에서 JSON→CSV 미설정 | 데이터가 다음 노드로 안 넘어감 | `자동 변환(JSON→CSV): 켜짐` 확인 |
 | 파이썬 노드에서 전체 코드 붙여넣기 | 에러 발생 | `execute()` 내부 코드만 붙여넣기 |
+| 파이썬 코드에 `def`/`return` 사용 | 실행 차단 에러 | 헬퍼 함수 없이 인라인으로 작성 (manual.md 최신 코드 참고) |
 | 에이전트 메시지 가로채기 미연결 | 워크플로우가 실행 안 됨 | 에이전트 설정에서 가로채기 노드 선택 |
 | 데이터 조건 분기 조건 오류 | 항상 통과/항상 차단 | `is_pass` 컬럼 값이 boolean인지 확인 |
 | 포트 타입 불일치 | 엣지 연결 안 됨 | 같은 타입의 포트끼리만 연결 가능 |
@@ -550,9 +556,13 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=nlrc&type=JSON&ID={결
 - JSON 입출력 계약
 - 내부 DB 스키마/검증 규칙
 
-**보강하면 좋은 것:**
+**이미 반영된 개선:**
+- 출력 템플릿에 아이콘/기호 포함 전체 템플릿 적용 완료
+- `부재` 명시 규칙으로 환각 방지 강화
+- 파이썬 코드에서 `def`/`return` 제거 → AI Canvas 호환성 확보
+
+**추가 보강하면 좋은 것:**
 1. 노동위원회 결정문 API(`nlrc`) 추가 → 징계 사건 근거 대폭 강화
 2. 차단응답을 파이썬으로 대체 → 크레딧 절약
 3. 에이전트 System Prompt에 사전 질문 로직 추가 → 모호한 질의 방지
-4. Step 1에서 필수 슬롯을 4개로 줄이기 → 초기 성공률 향상
-5. API 재시도 로직 검토 → AI Canvas 파이썬 노드에서 가능 여부 확인 후 결정
+4. API 재시도 로직 검토 → AI Canvas 파이썬 노드에서 가능 여부 확인 후 결정
