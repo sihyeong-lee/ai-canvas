@@ -50,6 +50,37 @@
       "keyFiles": []
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "claude_opi.md",
+      "accessCount": 39,
+      "lastAccessed": 1772754133854,
+      "type": "directory"
+    },
+    {
+      "path": "_pdf_text/11.노드 데이터.txt",
+      "accessCount": 3,
+      "lastAccessed": 1772690055093,
+      "type": "directory"
+    },
+    {
+      "path": "",
+      "accessCount": 1,
+      "lastAccessed": 1772689875695,
+      "type": "directory"
+    },
+    {
+      "path": "error.md",
+      "accessCount": 1,
+      "lastAccessed": 1772689900356,
+      "type": "file"
+    },
+    {
+      "path": "manual.md",
+      "accessCount": 1,
+      "lastAccessed": 1772689900539,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }
