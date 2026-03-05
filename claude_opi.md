@@ -1523,6 +1523,8 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={해석례ID}&
 | API URL에 `OC=tud1211` 누락 | API 응답 비어 있음 | 노드 5 코드의 `base` URL 확인 |
 | 파이썬 코드에 `return` 또는 `import` 사용 | 실행 차단 에러 | 이 문서의 코드는 해당 키워드 없음 |
 | 커스텀 API JSON→CSV 자동변환 끔 | 데이터 다음 노드 미전달 | `자동 변환(JSON→CSV): 켜짐` 확인 |
+| 노드 5/9~11에서 query 이중 인코딩 | API URL에 `%25EC...` 포함 | 인코딩 1회만 허용 — 이미 `%`로 시작하면 다시 인코딩 금지 |
+| 커스텀 API 노드에서 `api_method/api_headers_json/api_body` 컬럼 없음 | `sequence item 0: expected str instance, NoneType found` | 노드 5/9~11 출력에 api_* 컬럼 포함됐는지 확인 |
 
 ---
 
@@ -1534,6 +1536,38 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={해석례ID}&
 | **Phase 2** | 근거표준화(노드 16) + 근거스코어링(노드 17) 도입 | 2~4일 | Evidence 스키마 정상 출력 확인 |
 | **Phase 3** | 내부DB 조회 노드 연결 (노드 15 입력4 추가) | 3~5일 | 유사사례 섹션 실데이터 반영 |
 | **Phase 4** | 중계 API 도입 + 실패율 모니터링 | 운영 중 | API 실패율 < 5% |
+
+---
+
+## 10-1. Worker 재시도 프록시 (선택 적용)
+
+외부 API 간헐 오류를 자동 재시도로 흡수합니다. 다음 중 1개라도 해당하면 적용을 권장합니다:
+
+1. 같은 URL이 수동 재실행에서만 간헐 성공
+2. 하루 3회 이상 `[Errno 104]` 발생
+3. 목록 API red가 본문/통합 노드까지 연쇄 차단
+
+### Worker URL 설정 방법
+
+노드 5 URL 생성 코드의 `base` 변수를 Worker URL로 교체합니다:
+
+```python
+# Worker 미사용 (기본)
+# base = "https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&type=JSON"
+
+# Worker 사용 시 아래 줄로 교체 (실제 Worker URL 입력)
+worker_base = "https://law-retry-proxy.<your-subdomain>.workers.dev"
+base = f"{worker_base}/drf/search?oc=tud1211&type=JSON"
+```
+
+노드 9~11도 동일하게 `law.go.kr` 대신 Worker URL 경유로 변경합니다.
+
+### Worker 적용 기준 & 중단 기준
+
+| 구분 | 기준 |
+|------|------|
+| 적용 권장 | `[Errno 104]` 하루 3회 이상 / 간헐 성공 반복 |
+| Worker 적용 후 502 반복 | upstream 장애로 판단 → 관리자 문의 |
 
 ---
 
