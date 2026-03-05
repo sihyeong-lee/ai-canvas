@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1772602279821,
+  "lastScanned": 1772688994978,
   "projectRoot": "/home/user/ai-canvas",
   "techStack": {
     "languages": [],
@@ -28,242 +28,28 @@
     "gitBranches": null
   },
   "customNotes": [],
-  "directoryMap": {},
-  "hotPaths": [
-    {
-      "path": "claude_opi.md",
-      "accessCount": 55,
-      "lastAccessed": 1772687948469,
-      "type": "file"
+  "directoryMap": {
+    "_pdf_text": {
+      "path": "_pdf_text",
+      "purpose": null,
+      "fileCount": 18,
+      "lastAccessed": 1772688994968,
+      "keyFiles": [
+        "1.시작하기.txt",
+        "10.노드 UI.txt",
+        "11.노드 데이터.txt",
+        "12.노드 모델.txt",
+        "13.노드 시각화.txt"
+      ]
     },
-    {
-      "path": "manual.md",
-      "accessCount": 23,
-      "lastAccessed": 1772687321317,
-      "type": "file"
-    },
-    {
-      "path": "",
-      "accessCount": 4,
-      "lastAccessed": 1772605214438,
-      "type": "directory"
-    },
-    {
-      "path": "징계_챗봇_AI_Canvas_구축계획.md",
-      "accessCount": 4,
-      "lastAccessed": 1772667227446,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/9.노드 API.txt",
-      "accessCount": 3,
-      "lastAccessed": 1772605532444,
-      "type": "file"
-    },
-    {
-      "path": "act.md",
-      "accessCount": 3,
-      "lastAccessed": 1772667100596,
-      "type": "file"
-    },
-    {
-      "path": "step1.md",
-      "accessCount": 3,
-      "lastAccessed": 1772667335265,
-      "type": "file"
-    },
-    {
-      "path": "error.md",
-      "accessCount": 3,
-      "lastAccessed": 1772687194741,
-      "type": "file"
-    },
-    {
-      "path": "OMC-README.md",
-      "accessCount": 1,
-      "lastAccessed": 1772602653793,
-      "type": "file"
-    },
-    {
-      "path": "README.md",
-      "accessCount": 1,
-      "lastAccessed": 1772605214060,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/1.시작하기.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605525361,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/2.AI모델구축.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605525577,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/3.데이터 시각화.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605525860,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/4.대시보드 UI 제작 및 애플리케이션 구축배포.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605526561,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/5.프레임을 활용한 프레젠테이션 및 캔버스 공유.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605526733,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/6.캔버스 사용 가이드.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605526900,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/7.워크스페이스.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605527221,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/8.애플리케이션 페이지.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605528248,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/10.노드 UI.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605529791,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/11.노드 데이터.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605530029,
-      "type": "file"
-    },
-    {
-      "path": "lsEfYdListGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605533102,
-      "type": "file"
-    },
-    {
-      "path": "lsEfYdInfoGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605533417,
-      "type": "file"
-    },
-    {
-      "path": "precListGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605533594,
-      "type": "file"
-    },
-    {
-      "path": "precInfoGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605534565,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/12.노드 모델.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605534762,
-      "type": "file"
-    },
-    {
-      "path": "expcListGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605534938,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/13.노드 시각화.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605535119,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/14.노드 알림.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605535454,
-      "type": "file"
-    },
-    {
-      "path": "expcInfoGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605535620,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/15.노드 전처리.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605536807,
-      "type": "file"
-    },
-    {
-      "path": "guideList.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605536829,
-      "type": "file"
-    },
-    {
-      "path": "nlrcListGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605537007,
-      "type": "file"
-    },
-    {
-      "path": "nlrcInfoGuide.html",
-      "accessCount": 1,
-      "lastAccessed": 1772605537167,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/16.노드 평가.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605539967,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/17.애플리케이션 및 배포.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605540397,
-      "type": "file"
-    },
-    {
-      "path": "_pdf_text/[기업용 AI Canvas] 위젯 사용 설명서.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605540732,
-      "type": "file"
-    },
-    {
-      "path": "labor_law_seed_14.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605593843,
-      "type": "file"
-    },
-    {
-      "path": "labor_law_seed_urls_14.txt",
-      "accessCount": 1,
-      "lastAccessed": 1772605594008,
-      "type": "file"
-    },
-    {
-      "path": "징계_챗봇_AI_Canvas_설계_v2.md",
-      "accessCount": 1,
-      "lastAccessed": 1772669841466,
-      "type": "file"
+    "노동법 RAG": {
+      "path": "노동법 RAG",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1772688994971,
+      "keyFiles": []
     }
-  ],
+  },
+  "hotPaths": [],
   "userDirectives": []
 }
