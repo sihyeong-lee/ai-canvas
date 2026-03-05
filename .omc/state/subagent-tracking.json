@@ -62,10 +62,17 @@
       "status": "completed",
       "completed_at": "2026-03-05T05:08:11.113Z",
       "duration_ms": 99759
+    },
+    {
+      "agent_id": "ab376c26420be5cdb",
+      "agent_type": "oh-my-claudecode:deep-executor",
+      "started_at": "2026-03-05T05:17:55.157Z",
+      "parent_mode": "none",
+      "status": "running"
     }
   ],
-  "total_spawned": 9,
+  "total_spawned": 11,
   "total_completed": 7,
   "total_failed": 0,
-  "last_updated": "2026-03-05T05:10:54.295Z"
+  "last_updated": "2026-03-05T05:17:55.261Z"
 }
