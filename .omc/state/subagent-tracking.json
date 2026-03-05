@@ -68,11 +68,13 @@
       "agent_type": "oh-my-claudecode:deep-executor",
       "started_at": "2026-03-05T05:17:55.157Z",
       "parent_mode": "none",
-      "status": "running"
+      "status": "completed",
+      "completed_at": "2026-03-05T05:19:47.695Z",
+      "duration_ms": 112538
     }
   ],
   "total_spawned": 11,
-  "total_completed": 7,
+  "total_completed": 8,
   "total_failed": 0,
-  "last_updated": "2026-03-05T05:17:55.261Z"
+  "last_updated": "2026-03-05T05:19:47.799Z"
 }
