@@ -31,15 +31,15 @@
   "directoryMap": {},
   "hotPaths": [
     {
-      "path": "manual.md",
-      "accessCount": 16,
-      "lastAccessed": 1772667310817,
+      "path": "claude_opi.md",
+      "accessCount": 26,
+      "lastAccessed": 1772678282483,
       "type": "file"
     },
     {
-      "path": "claude_opi.md",
+      "path": "manual.md",
       "accessCount": 16,
-      "lastAccessed": 1772667310996,
+      "lastAccessed": 1772667310817,
       "type": "file"
     },
     {
@@ -250,6 +250,18 @@
       "path": "labor_law_seed_urls_14.txt",
       "accessCount": 1,
       "lastAccessed": 1772605594008,
+      "type": "file"
+    },
+    {
+      "path": "error.md",
+      "accessCount": 1,
+      "lastAccessed": 1772669841283,
+      "type": "file"
+    },
+    {
+      "path": "징계_챗봇_AI_Canvas_설계_v2.md",
+      "accessCount": 1,
+      "lastAccessed": 1772669841466,
       "type": "file"
     }
   ],
