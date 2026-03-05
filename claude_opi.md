@@ -1239,6 +1239,19 @@ https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={해석례ID}&
 
 ---
 
+## 8-1. v2 운영 4대 원칙 (한눈에 보기)
+
+> 운영 중 판단이 흔들릴 때 이 4가지만 확인하세요.
+
+| # | 원칙 | 상세 |
+|---|------|------|
+| 1 | **성공한 소스만 표준 스키마로 통합** | 법령/판례/해석 중 일부 API가 실패해도 성공한 근거만 Evidence 스키마로 변환해 파이프라인 유지 |
+| 2 | **공식근거 1건 이상이면 답변 생성 유지** | `official_evidence_count >= 1`이면 차단하지 않고 답변 생성 경로를 계속 진행 |
+| 3 | **내부DB가 비어도 중단 없이 진행** | Phase 3 내부DB 미연동 상태에서도 노드 15~17이 정상 동작해야 함 |
+| 4 | **내부DB는 보조 용도만** | 법적 결론의 단독 근거로 사용하지 않음 — 유사사례·양정 비교·사내 절차에만 활용 |
+
+---
+
 ## 9. 자주 하는 실수 & 해결법 (v2)
 
 | 실수 | 증상 | 해결법 |
@@ -1316,7 +1329,7 @@ Phase 2까지 완료 후 진행합니다.
 | 노드 18 (답변생성) | `gpt-5.2` 또는 `gpt-5` | 4500 (필요 시 6000~7000) |
 | 노드 21 (차단응답) | `gpt-5-nano` | 250 |
 
-> `gpt-4o-mini`를 답변생성에 사용하면 템플릿 누락, 법률 문맥 정밀도 저하, 근거 연결 약화 현상이 발생할 수 있습니다.
+> `gpt-4o-mini`를 답변생성에 사용하면 템플릿 누락, 법률 문맥 정밀도 저하, 긴 답변에서 근거 연결 약화 현상이 발생할 수 있습니다.
 
 ---
 
@@ -1330,9 +1343,9 @@ Phase 2까지 완료 후 진행합니다.
 | E-004 | 노드5 | `name 'format' is not defined` | 제한 런타임 built-in 차단 | f-string으로 대체 |
 | E-005 | 노드10/11 | `name 'hasattr' is not defined` | 제한 런타임 built-in 차단 | **이 문서 노드 10/11 코드로 교체** |
 | E-006 | 노드19 | `Not allowed context: compile(` | `re.compile()` 사용 | **이 문서 노드 19 코드로 교체** |
-| E-007 | 노드6~8 | `sequence item 0: expected str instance, NoneType found` | method/header/body None 포함 | API 노드 method/header/body 고정 확인 |
+| E-007 | 노드6~8, 12~14 | `sequence item 0: expected str instance, NoneType found` | method/header/body 또는 URL 값에 None 포함 | API 노드 method/header/body 고정 확인 + 빈 행 제거 |
 | E-008 | 노드12~14 | `비정상적인 URL이 포함되어 있습니다` | detail_url 빈값/깨진값 | 노드 9~11 URL 생성 로직 확인 |
-| E-009 | 노드9~11 | detail URL 빈값 | API 결과가 blob 형태 | blob 파싱 버전 코드 적용 |
+| E-009 | 노드9~11 | detail URL 빈값 | API 결과가 blob(`LawSearch:law` 등) 형태 | blob 파싱 버전 코드 적용 / 목록 API 데이터보기로 컬럼 형태 사전 확인 |
 | E-010 | 노드6 | `[Errno 104] Connection reset by peer` | 외부 API 일시 연결 리셋 | 실패 노드만 1~2회 재시도 |
 | E-011 | 노드22 | 응답 컬럼 미노출 | `question_*` 컬럼 선택 | `output_response*` 선택 |
 | E-012 | 노드15 | 목록 API 일부 실패 시 통합 노드 오류 | 상류 red 노드 데이터 끊김 | v2 부분 성공 허용 구조로 해결 |
