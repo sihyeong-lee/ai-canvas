@@ -1,7 +1,7 @@
 {
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"git pull origin claude/install-oh-my-claudecode-OXMs8 --rebase --no-edit\",\"description\":\"Pull with rebase to resolve divergent branches\"}",
-  "error": "Exit code 128\nerror: cannot pull with rebase: You have unstaged changes.\nerror: Please commit or stash them.\n\nerror: cannot pull with rebase: You have unstaged changes.\nerror: Please commit or stash them.",
-  "timestamp": "2026-03-04T06:38:19.762Z",
+  "tool_name": "Read",
+  "tool_input_preview": "{\"file_path\":\"/tmp/claude-0/-home-user-ai-canvas/tasks/a81661f573b8cbec6.output\",\"limit\":200}",
+  "error": "File content (57305 tokens) exceeds maximum allowed tokens (25000). Please use offset and limit parameters to read specific portions of the file, or use the GrepTool to search for specific content.",
+  "timestamp": "2026-03-04T23:33:45.725Z",
   "retry_count": 3
 }

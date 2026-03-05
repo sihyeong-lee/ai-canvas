@@ -31,9 +31,15 @@
   "directoryMap": {},
   "hotPaths": [
     {
+      "path": "manual.md",
+      "accessCount": 16,
+      "lastAccessed": 1772667310817,
+      "type": "file"
+    },
+    {
       "path": "claude_opi.md",
-      "accessCount": 13,
-      "lastAccessed": 1772607622588,
+      "accessCount": 16,
+      "lastAccessed": 1772667310996,
       "type": "file"
     },
     {
@@ -43,15 +49,27 @@
       "type": "directory"
     },
     {
-      "path": "manual.md",
+      "path": "징계_챗봇_AI_Canvas_구축계획.md",
       "accessCount": 4,
-      "lastAccessed": 1772607368683,
+      "lastAccessed": 1772667227446,
       "type": "file"
     },
     {
       "path": "_pdf_text/9.노드 API.txt",
       "accessCount": 3,
       "lastAccessed": 1772605532444,
+      "type": "file"
+    },
+    {
+      "path": "act.md",
+      "accessCount": 3,
+      "lastAccessed": 1772667100596,
+      "type": "file"
+    },
+    {
+      "path": "step1.md",
+      "accessCount": 3,
+      "lastAccessed": 1772667335265,
       "type": "file"
     },
     {
@@ -64,24 +82,6 @@
       "path": "README.md",
       "accessCount": 1,
       "lastAccessed": 1772605214060,
-      "type": "file"
-    },
-    {
-      "path": "징계_챗봇_AI_Canvas_구축계획.md",
-      "accessCount": 1,
-      "lastAccessed": 1772605497181,
-      "type": "file"
-    },
-    {
-      "path": "act.md",
-      "accessCount": 1,
-      "lastAccessed": 1772605497613,
-      "type": "file"
-    },
-    {
-      "path": "step1.md",
-      "accessCount": 1,
-      "lastAccessed": 1772605498313,
       "type": "file"
     },
     {
