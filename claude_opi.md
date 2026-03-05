@@ -10,8 +10,10 @@
 
 | 항목 | Step1 | v2 |
 |---|---|---|
-| 차단 조건 | 공식근거 2건 미만 또는 슬롯 누락 | 공식근거 **0건** 또는 금지 도메인만 차단 |
+| 차단 조건 | 공식근거 2건 미만 또는 슬롯 누락 | QTYPE별 차단 — LEGAL_JUDGMENT는 항상 통과 |
 | 근거 부족 처리 | 차단응답 반환 | **[불확실/부재]** 표기 후 답변 생성 유지 |
+| 법률 판단 질문 | 공식근거 없으면 차단 | **LLM 법률 지식으로 항상 답변** |
+| 내부DB 전용 질문 | 차단 기준 없음 | 공식근거 0건이면 차단 |
 | 노드 수 | 20개 | **22개** (+근거표준화, +근거스코어링) |
 | Python 제약 | `re.compile`, `hasattr` 사용 | **제거** (런타임 오류 방지) |
 | 답변생성 모델 | gpt-4o-mini | **gpt-5.2** (또는 gpt-5) |
@@ -51,7 +53,7 @@
                                 ↓
                 [노드 18] 에이전트 프롬프트_답변생성  (v2 프롬프트)
                                 ↓
-                [노드 19] 파이썬_검열게이트  (v2: evidence >= 1)
+                [노드 19] 파이썬_검열게이트  (v2.1: QTYPE 분기)
                                 ↓
                 [노드 20] 데이터 조건 분기
                     ↓ (통과)            ↓ (차단)
@@ -907,17 +909,48 @@ result = result_df
 - **출력 열 이름**: `draft_answer`
 - **툴 사용**: 끔
 - **권장 모델**: `gpt-5.2` (또는 `gpt-5`), max tokens `4500` (복잡한 케이스는 `6000~7000`)
-- **v2 변경**: 공식근거 1건 이상이면 종합판단 작성, 부족 항목은 [불확실/부재] 표기
+- **v2.1 변경**: QTYPE 분류 추가 — LEGAL_JUDGMENT는 공식 API 실패 시에도 LLM 법률 지식으로 답변
 - **프롬프트** (아래 전체를 복사-붙여넣기):
 
 ```
-역할: 근거 기반 징계 검토 보고서 작성 (v2)
-금지: 근거에 없는 단정, 출처 없는 결론, URL 없는 주장
+역할: 법률 전문 징계 검토 보고서 작성 (v2.1)
 반드시 아래 템플릿을 제목/순서/아이콘/기호까지 그대로 사용
-근거가 없는 항목은 빈칸 대신 반드시 `[불확실/부재]`라고 기재하고 이유를 간략히 명시
-링크는 원문 URL만 허용
-공식근거(is_official=true) 1건 이상이면 `♟️ 종합 판단` 작성
-내부DB가 연결되지 않은 경우 `🏢 내부DB 참고` 섹션 전체를 `[불확실/부재 - 내부DB 미연결]`로 기재
+근거가 없는 항목은 빈칸 대신 `[불확실/부재]`로 기재하고 이유 명시
+
+=== [1단계] 질문 유형 분류 (첫 줄에 반드시 출력) ===
+아래 셋 중 하나를 선택해 답변 맨 첫 줄에 출력:
+
+[QTYPE: LEGAL_JUDGMENT]
+ → 법령/판례/법리/노동법 지식으로 판단 가능한 질문
+   예) 징계 양정 적정성, 해고 유효성, 절차 위반 여부, 요건 검토, 징계 수위 타당성
+
+[QTYPE: INTERNAL_ONLY]
+ → 회사 내부 DB 없이는 답할 수 없는 질문
+   예) 사내 징계 건수 통계, 특정 직원 처분 이력, 내부 양정 기준표 조회
+
+[QTYPE: HYBRID]
+ → 법적 판단 + 내부 사례 모두 필요한 복합 질문
+
+=== [2단계] 유형별 처리 방침 ===
+
+LEGAL_JUDGMENT인 경우:
+- 공식 검색 결과(Evidence)가 있으면 최우선 활용
+- 검색 결과가 없거나 부족해도 법률 전문 지식(근로기준법, 노동법, 대법원 판례 원칙, 징계법리)으로 답변 생성 — 절대 포기하지 말 것
+- 법률지식 기반으로 작성한 항목에 `[법률지식 기반]` 태그 표시
+- `📚 적용 법령`: 알려진 조문·법령명 서술 (URL 없으면 조문번호만 명시, [불확실/부재] 금지)
+- `🧑‍⚖️ 관련 판례`: 알려진 판례 원칙·법리 서술 (사건번호 불명 시 "대법원 판례 원칙" 으로 기재)
+- `♟️ 종합 판단`: 반드시 작성
+
+INTERNAL_ONLY인 경우:
+- 내부 DB 없이 답변 불가 → `♟️ 종합 판단` 작성 금지
+- `🏢 내부DB 참고` 섹션에 "[INTERNAL_ONLY] 내부DB 연동 후 답변 가능"을 명시
+
+HYBRID인 경우:
+- 법적 판단 부분: LEGAL_JUDGMENT 방침 적용
+- 내부 사례 부분: 내부DB 없으면 [불확실/부재] 표기
+- 공식근거 1건 이상 있으면 `♟️ 종합 판단` 작성
+
+=== [3단계] 보고서 템플릿 ===
 
 🧊 사실관계 요약
 - {사용자 진술 요약}
@@ -928,18 +961,18 @@ result = result_df
 - {쟁점2}
 
 📚 적용 법령
-- 법령명: {name 또는 [불확실/부재]}
-- 조문: {article 또는 [불확실/부재]}
+- 법령명: {name — 검색 결과 또는 [법률지식 기반] 조문}
+- 조문: {article}
 - 시행일: {effective_date 또는 [불확실/부재]}
 - 해석 포인트: {point}
-- 근거 링크: {url 또는 [불확실/부재]}
+- 근거 링크: {url — 없으면 생략}
 
 🧑‍⚖️ 관련 판례
-- 법원: {court 또는 [불확실/부재]}
+- 법원: {court 또는 [법률지식 기반] 원칙}
 - 선고일: {date 또는 [불확실/부재]}
 - 사건번호: {case_no 또는 [불확실/부재]}
 - 판시요지: {holding}
-- 근거 링크: {url 또는 [불확실/부재]}
+- 근거 링크: {url — 없으면 생략}
 
 🏢 내부DB 참고
 - 사내 규정: {rule_name 또는 [불확실/부재]}
@@ -947,7 +980,7 @@ result = result_df
 - 차이점: {difference 또는 [불확실/부재]}
 
 ♟️ 종합 판단
-- {공식근거 1건 이상 있을 때 작성. 없으면 이 섹션 생략}
+- {LEGAL_JUDGMENT·HYBRID는 반드시 작성. INTERNAL_ONLY는 생략}
 
 🚀 다음 액션
 - {필요 증거 또는 추가 정보}
@@ -955,7 +988,7 @@ result = result_df
 - {기한}
 
 [불확실/부재]
-- {근거가 부족하거나 확인되지 않은 항목을 여기에 명시}
+- {확인되지 않은 항목 명시}
 ```
 
 ---
@@ -963,10 +996,11 @@ result = result_df
 ### 노드 19: 파이썬_검열게이트
 
 - **카테고리**: 전처리 > 파이썬 스크립트
-- **v2 변경**:
+- **v2.1 변경**:
   - `re.compile()` → `while + re.search()` (E-006 오류 방지)
-  - 차단 조건: `evidence >= 1` 통과 (기존 `>= 2` → 완화)
-  - 슬롯 누락은 하드 차단 제외 (`[불확실/부재]` 표기로 처리)
+  - **QTYPE 분류 기반 게이트**: LEGAL_JUDGMENT는 공식근거 0건이어도 통과
+  - INTERNAL_ONLY는 공식근거 0건이면 차단
+  - 금지 도메인은 QTYPE 무관하게 항상 차단
 - 아래 코드를 `execute()` 내부에 복사-붙여넣기:
 
 ```python
@@ -995,6 +1029,12 @@ for _, r in df.iterrows():
     if draft.lower() == "nan":
         draft = ""
 
+    # QTYPE 추출 (노드 18이 첫 줄에 출력한 마커)
+    qtype = "HYBRID"
+    m_q = re.search(r"\[QTYPE:\s*(LEGAL_JUDGMENT|INTERNAL_ONLY|HYBRID)\]", draft)
+    if m_q:
+        qtype = m_q.group(1).strip()
+
     # URL 추출: re.compile 금지 → while + re.search 반복
     urls = []
     search_text = draft
@@ -1018,16 +1058,27 @@ for _, r in df.iterrows():
 
     bad_domain = any(not any(h in u for h in allow_hosts) for u in urls) if urls else False
 
-    # v2 정책: evidence >= 1 통과, 0건 또는 금지 도메인만 차단
-    is_pass = (evidence >= 1) and (not bad_domain)
-
+    # v2.1 QTYPE 기반 게이트 정책
     reasons = []
-    if evidence == 0:
-        reasons.append("official_evidence_count=0")
     if bad_domain:
+        is_pass = False
         reasons.append("domain_not_allowed")
+    elif qtype == "LEGAL_JUDGMENT":
+        # 법률 판단 질문: LLM 법률 지식으로 항상 답변 가능 → 항상 통과
+        is_pass = True
+    elif qtype == "INTERNAL_ONLY":
+        # 내부DB 전용 질문: 공식근거 없으면 차단
+        is_pass = (evidence >= 1)
+        if evidence == 0:
+            reasons.append("internal_only_no_evidence")
+    else:
+        # HYBRID 또는 미분류: 공식근거 1건 이상 필요
+        is_pass = (evidence >= 1)
+        if evidence == 0:
+            reasons.append("official_evidence_count=0")
 
     row["is_pass"] = bool(is_pass)
+    row["question_type"] = qtype
     row["official_evidence_count"] = int(evidence)
     row["fail_reason"] = " / ".join(reasons) if reasons else ""
     rows.append(row)
