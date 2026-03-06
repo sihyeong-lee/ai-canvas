@@ -227,7 +227,12 @@
 - `query_class`: 내부 통계/DB 없이는 답 불가이면 `internal_db_only`, 일반 법률 판단/요건이면 `legal_analysis`, 내부 사실 + 법률 검토 동시 필요이면 `mixed`
 - `internal_db_required`: `internal_db_only` 또는 `mixed`이면 `true`, 그 외 `false`
 - ※ query_class(노드 3 사전 분류)는 노드 19/20의 QTYPE 게이트와 역할이 다름 — 섹션 19 매핑표 참조
+
+사용자 입력:
+{{content}}
 ```
+
+> **⚠️ 핵심**: 프롬프트 마지막 줄 `{{content}}`가 반드시 있어야 합니다. AI Canvas 에이전트 프롬프트 노드는 입력 데이터셋의 컬럼값을 `{{컬럼명}}` 자리표시자로만 주입합니다. 이 줄이 없으면 가로채기 노드에서 넘어온 사용자 질문이 모델에 전달되지 않습니다.
 
 ---
 
@@ -561,49 +566,44 @@ result = pd.DataFrame(rows, columns=[
 
 - **카테고리**: 전처리 > 파이썬 스크립트
 - **입력**: 노드 6(API_법령목록) 결과
-- **v2.2 변경**: blob 파싱(LawSearch:law), efYd 지원, 상세링크 역추출, api_* 컬럼 추가
+- **v2.3 변경**: `return`/`chr`/`def` 완전 제거 — 인라인화 (E-015 대응)
 - 아래 코드를 `execute()` 내부에 복사-붙여넣기:
 
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
+# 퍼센트 인코딩 테이블 (return/chr/def 없음)
 _hex = "0123456789ABCDEF"
-_safe = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-
-def _pct(s):
-    out = []
-    for b in s.encode("utf-8"):
-        if b < 128 and chr(b) in _safe:
-            out.append(chr(b))
-        else:
-            out.append("%" + _hex[b >> 4] + _hex[b & 0xF])
-    return "".join(out)
-
-def _clean_id(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    s = str(v).strip()
-    if s.lower() == "nan" or not s:
-        return ""
-    # float 처리: "12345.0" -> "12345"
-    if s.endswith(".0") and s[:-2].isdigit():
-        s = s[:-2]
-    return s
+_safe_set = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+_pct_map = {}
+for _i in range(256):
+    _bc = bytes([_i]).decode("latin-1")
+    if _i < 128 and _bc in _safe_set:
+        _pct_map[_i] = _bc
+    else:
+        _pct_map[_i] = "%" + _hex[_i >> 4] + _hex[_i & 0xF]
 
 rows = []
 for _, r in df.iterrows():
     row = r.to_dict()
 
-    # 1) 직접 ID 컬럼 탐색
+    # 인라인 _clean 헬퍼 (함수/return 없음)
+    def _cln(v):
+        _s = "" if v is None else str(v).strip()
+        if not _s or _s.lower() == "nan":
+            _s = ""
+        if _s.endswith(".0") and _s[:-2].isdigit():
+            _s = _s[:-2]
+        # 결과를 리스트에 저장 (return 대체)
+        _cln_out[0] = _s
+
+    _cln_out = [""]
+
+    # 1) ID 탐색
     idv = ""
     for k in ["ID", "id", "법령ID", "law_id"]:
         if k in row:
-            idv = _clean_id(row[k])
+            _cln(row[k]); idv = _cln_out[0]
             if idv:
                 break
 
@@ -611,19 +611,19 @@ for _, r in df.iterrows():
     mstv = ""
     for k in ["MST", "mst", "법령MST", "법령일련번호"]:
         if k in row:
-            mstv = _clean_id(row[k])
+            _cln(row[k]); mstv = _cln_out[0]
             if mstv:
                 break
 
-    # 3) efYd(시행일자) 탐색
+    # 3) efYd 탐색
     efyd = ""
     for k in ["efYd", "efyd", "시행일자", "법령시행일"]:
         if k in row:
-            efyd = _clean_id(row[k])
+            _cln(row[k]); efyd = _cln_out[0]
             if efyd:
                 break
 
-    # 4) blob 파싱 (LawSearch:law 구조)
+    # 4) blob 파싱 (LawSearch:law)
     if not idv and not mstv:
         for k in ["LawSearch:law", "law", "blob", "data"]:
             bv = row.get(k, None)
@@ -642,15 +642,15 @@ for _, r in df.iterrows():
                 if isinstance(blob, list) and blob:
                     blob = blob[0]
                 if isinstance(blob, dict):
-                    idv = _clean_id(blob.get("법령ID", blob.get("ID", blob.get("id", ""))))
-                    mstv = _clean_id(blob.get("법령일련번호", blob.get("MST", blob.get("mst", ""))))
-                    efyd = _clean_id(blob.get("법령시행일자", blob.get("efYd", efyd)))
+                    _cln(blob.get("법령ID", blob.get("ID", blob.get("id", "")))); idv = _cln_out[0]
+                    _cln(blob.get("법령일련번호", blob.get("MST", blob.get("mst", "")))); mstv = _cln_out[0]
+                    _cln(blob.get("법령시행일자", blob.get("efYd", efyd))); efyd = _cln_out[0]
             except Exception:
                 pass
             if idv or mstv:
                 break
 
-    # 5) 상세링크에서 ID/MST 역추출 (폴백)
+    # 5) 상세링크 역추출
     if not idv and not mstv:
         for k in ["법령상세링크", "detail_link", "링크", "법령URL", "url", "URL"]:
             lv = row.get(k, None)
@@ -659,26 +659,27 @@ for _, r in df.iterrows():
             lv = str(lv).strip()
             if not lv or lv.lower() == "nan" or not lv.startswith("http"):
                 continue
-            m = re.search(r"[&?]ID=([^&\s]+)", lv)
-            if m:
-                idv = m.group(1).strip()
+            _m = re.search(r"[&?]ID=([^&\s]+)", lv)
+            if _m:
+                idv = _m.group(1).strip()
                 break
-            m = re.search(r"[&?]MST=([^&\s]+)", lv)
-            if m:
-                mstv = m.group(1).strip()
+            _m = re.search(r"[&?]MST=([^&\s]+)", lv)
+            if _m:
+                mstv = _m.group(1).strip()
                 break
 
-    # URL 생성
+    # URL 생성 (인라인 인코딩)
+    efyd_enc = "".join([_pct_map[b] for b in efyd.encode("utf-8")]) if efyd else ""
     if idv:
-        idv_enc = _pct(idv)
+        idv_enc = "".join([_pct_map[b] for b in idv.encode("utf-8")])
         url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&ID={idv_enc}&type=JSON"
-        if efyd:
-            url += f"&efYd={_pct(efyd)}"
+        if efyd_enc:
+            url += f"&efYd={efyd_enc}"
     elif mstv:
-        mstv_enc = _pct(mstv)
+        mstv_enc = "".join([_pct_map[b] for b in mstv.encode("utf-8")])
         url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=eflaw&MST={mstv_enc}&type=JSON"
-        if efyd:
-            url += f"&efYd={_pct(efyd)}"
+        if efyd_enc:
+            url += f"&efYd={efyd_enc}"
     else:
         url = ""
 
@@ -698,53 +699,39 @@ result = pd.DataFrame(rows, columns=["law_detail_url", "api_method", "api_header
 
 - **카테고리**: 전처리 > 파이썬 스크립트
 - **입력**: 노드 7(API_판례목록) 결과
-- **v2 변경**: `hasattr` 제거 (E-005 오류 방지)
-- **v2.2 변경**: blob 파싱 추가(PrecSearch:prec), .0 접미사 제거, 상세링크 역추출, api_* 컬럼 추가
+- **v2.3 변경**: `return`/`chr`/`def` 완전 제거 — 인라인화 (E-015 대응)
 - 아래 코드를 `execute()` 내부에 복사-붙여넣기:
 
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
 _hex = "0123456789ABCDEF"
-_safe = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
-
-def _pct(s):
-    out = []
-    for b in s.encode("utf-8"):
-        if b < 128 and chr(b) in _safe:
-            out.append(chr(b))
-        else:
-            out.append("%" + _hex[b >> 4] + _hex[b & 0xF])
-    return "".join(out)
-
-def _clean_id(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    s = str(v).strip()
-    if s.lower() == "nan" or not s:
-        return ""
-    if s.endswith(".0") and s[:-2].isdigit():
-        s = s[:-2]
-    return s
+_safe_set = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+_pct_map = {}
+for _i in range(256):
+    _bc = bytes([_i]).decode("latin-1")
+    if _i < 128 and _bc in _safe_set:
+        _pct_map[_i] = _bc
+    else:
+        _pct_map[_i] = "%" + _hex[_i >> 4] + _hex[_i & 0xF]
 
 rows = []
 for _, r in df.iterrows():
     row = r.to_dict()
 
-    # 1) 직접 ID 탐색
+    # 1) 직접 ID 탐색 (인라인 clean)
     idv = ""
     for k in ["ID", "id", "판례정보일련번호", "판례일련번호", "prec_id"]:
         if k in row:
-            idv = _clean_id(row[k])
-            if idv:
+            _cv = row[k]
+            _cv = "" if _cv is None else str(_cv).strip()
+            if _cv.lower() == "nan": _cv = ""
+            if _cv.endswith(".0") and _cv[:-2].isdigit(): _cv = _cv[:-2]
+            if _cv:
+                idv = _cv
                 break
 
-    # 2) blob 파싱 (PrecSearch:prec 구조)
+    # 2) blob 파싱 (PrecSearch:prec)
     if not idv:
         for k in ["PrecSearch:prec", "prec", "blob", "data"]:
             bv = row.get(k, None)
@@ -763,13 +750,17 @@ for _, r in df.iterrows():
                 if isinstance(blob, list) and blob:
                     blob = blob[0]
                 if isinstance(blob, dict):
-                    idv = _clean_id(blob.get("판례정보일련번호", blob.get("ID", blob.get("id", ""))))
+                    _raw = blob.get("판례정보일련번호", blob.get("ID", blob.get("id", "")))
+                    _cv = "" if _raw is None else str(_raw).strip()
+                    if _cv.lower() == "nan": _cv = ""
+                    if _cv.endswith(".0") and _cv[:-2].isdigit(): _cv = _cv[:-2]
+                    idv = _cv
             except Exception:
                 pass
             if idv:
                 break
 
-    # 3) 상세링크에서 ID 역추출
+    # 3) 상세링크 역추출
     if not idv:
         for k in ["판례상세링크", "detail_link", "링크", "판례URL", "url", "URL"]:
             lv = row.get(k, None)
@@ -778,15 +769,18 @@ for _, r in df.iterrows():
             lv = str(lv).strip()
             if not lv or lv.lower() == "nan" or not lv.startswith("http"):
                 continue
-            m = re.search(r"[&?]ID=([^&\s]+)", lv)
-            if m:
-                idv = m.group(1).strip()
-                if idv.endswith(".0") and idv[:-2].isdigit():
-                    idv = idv[:-2]
+            _m = re.search(r"[&?]ID=([^&\s]+)", lv)
+            if _m:
+                _cv = _m.group(1).strip()
+                if _cv.endswith(".0") and _cv[:-2].isdigit(): _cv = _cv[:-2]
+                idv = _cv
                 break
 
-    idv_enc = _pct(idv) if idv else ""
-    url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={idv_enc}&type=JSON" if idv else ""
+    if idv:
+        idv_enc = "".join([_pct_map[b] for b in idv.encode("utf-8")])
+        url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=prec&ID={idv_enc}&type=JSON"
+    else:
+        url = ""
 
     rows.append({
         "prec_detail_url": url,
@@ -809,45 +803,38 @@ result = pd.DataFrame(rows, columns=["prec_detail_url", "api_method", "api_heade
 - 아래 코드를 `execute()` 내부에 복사-붙여넣기:
 
 ```python
+# v2.3: def/_pct/_clean_id 제거 (E-015: return/yield 차단 우회)
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
 _hex = "0123456789ABCDEF"
-_safe = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+_safe_set = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
 
-def _pct(s):
-    out = []
-    for b in s.encode("utf-8"):
-        if b < 128 and chr(b) in _safe:
-            out.append(chr(b))
-        else:
-            out.append("%" + _hex[b >> 4] + _hex[b & 0xF])
-    return "".join(out)
-
-def _clean_id(v):
-    if v is None:
-        return ""
-    try:
-        if pd.isna(v):
-            return ""
-    except Exception:
-        pass
-    s = str(v).strip()
-    if s.lower() == "nan" or not s:
-        return ""
-    if s.endswith(".0") and s[:-2].isdigit():
-        s = s[:-2]
-    return s
+_pct_map = {}
+for _i in range(256):
+    _bc = bytes([_i]).decode("latin-1")
+    if _i < 128 and _bc in _safe_set:
+        _pct_map[_i] = _bc
+    else:
+        _pct_map[_i] = "%" + _hex[_i >> 4] + _hex[_i & 0xF]
 
 rows = []
 for _, r in df.iterrows():
     row = r.to_dict()
 
-    # 1) 직접 ID 탐색
+    # 1) 직접 ID 탐색 (인라인 clean)
     idv = ""
     for k in ["ID", "id", "행정해석ID", "법령해석례일련번호", "expc_id"]:
         if k in row:
-            idv = _clean_id(row[k])
-            if idv:
+            _cv = row[k]
+            _cv = "" if _cv is None else str(_cv).strip()
+            try:
+                if pd.isna(_cv): _cv = ""
+            except Exception:
+                pass
+            if _cv.lower() == "nan": _cv = ""
+            if _cv.endswith(".0") and _cv[:-2].isdigit(): _cv = _cv[:-2]
+            if _cv:
+                idv = _cv
                 break
 
     # 2) blob 파싱 (Expc:expc 구조)
@@ -869,7 +856,11 @@ for _, r in df.iterrows():
                 if isinstance(blob, list) and blob:
                     blob = blob[0]
                 if isinstance(blob, dict):
-                    idv = _clean_id(blob.get("법령해석례일련번호", blob.get("ID", blob.get("id", ""))))
+                    _bv = blob.get("법령해석례일련번호", blob.get("ID", blob.get("id", "")))
+                    _bv = "" if _bv is None else str(_bv).strip()
+                    if _bv.lower() == "nan": _bv = ""
+                    if _bv.endswith(".0") and _bv[:-2].isdigit(): _bv = _bv[:-2]
+                    idv = _bv
             except Exception:
                 pass
             if idv:
@@ -891,7 +882,7 @@ for _, r in df.iterrows():
                     idv = idv[:-2]
                 break
 
-    idv_enc = _pct(idv) if idv else ""
+    idv_enc = "".join([_pct_map[b] for b in idv.encode("utf-8")]) if idv else ""
     url = f"https://www.law.go.kr/DRF/lawService.do?OC=tud1211&target=expc&ID={idv_enc}&type=JSON" if idv else ""
 
     rows.append({
