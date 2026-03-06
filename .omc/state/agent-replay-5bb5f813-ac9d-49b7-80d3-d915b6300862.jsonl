@@ -1,0 +1,10 @@
+{"t":0,"agent":"a5652d1","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a742795","agent_type":"document-specialist","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a642947","agent_type":"Explore","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a5652d1","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":43186}
+{"t":0,"agent":"a742795","agent_type":"document-specialist","event":"agent_stop","success":true,"duration_ms":90834}
+{"t":0,"agent":"a642947","agent_type":"Explore","event":"agent_stop","success":true,"duration_ms":112923}
+{"t":0,"agent":"a37ff4b","agent_type":"document-specialist","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a32ac36","agent_type":"document-specialist","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a37ff4b","agent_type":"document-specialist","event":"agent_start","parent_mode":"none"}
+{"t":0,"agent":"a32ac36","agent_type":"document-specialist","event":"agent_start","parent_mode":"none"}
