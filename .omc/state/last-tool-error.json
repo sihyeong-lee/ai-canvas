@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"git pull --rebase origin claude/install-oh-my-claudecode-OXMs8 && git push -u origin claude/install-oh-my-claudecode-OXMs8\",\"description\":\"Rebase onto remote then push\"}",
+  "error": "Exit code 128\nerror: cannot pull with rebase: You have unstaged changes.\nerror: Please commit or stash them.\n\nerror: cannot pull with rebase: You have unstaged changes.\nerror: Please commit or stash them.",
+  "timestamp": "2026-03-06T02:13:57.853Z",
+  "retry_count": 3
+}

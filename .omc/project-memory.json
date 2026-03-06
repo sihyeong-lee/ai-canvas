@@ -1,0 +1,101 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1772776648689,
+  "projectRoot": "/home/user/ai-canvas",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "2017": {
+      "path": "2017",
+      "purpose": null,
+      "fileCount": 17,
+      "lastAccessed": 1772776648678,
+      "keyFiles": [
+        "2015가단107432.json",
+        "2015가단133205.json",
+        "2015나9809.json",
+        "2016가단217189.json",
+        "2016가단5200579.json"
+      ]
+    },
+    "2020": {
+      "path": "2020",
+      "purpose": null,
+      "fileCount": 50,
+      "lastAccessed": 1772776648681,
+      "keyFiles": [
+        "2013가합74313.json",
+        "2014가합525054.json",
+        "2014가합535259.json",
+        "2017가단5068314,2018가단5183425.json",
+        "2018가단66786.json"
+      ]
+    },
+    "2021": {
+      "path": "2021",
+      "purpose": null,
+      "fileCount": 32,
+      "lastAccessed": 1772776648683,
+      "keyFiles": [
+        "2015가합13718.xml",
+        "2016가합10830.xml",
+        "2016가합505092.xml",
+        "2016가합535017.xml",
+        "2017가합33112.xml"
+      ]
+    },
+    "_pdf_text": {
+      "path": "_pdf_text",
+      "purpose": null,
+      "fileCount": 18,
+      "lastAccessed": 1772776648685,
+      "keyFiles": [
+        "1.시작하기.txt",
+        "10.노드 UI.txt",
+        "11.노드 데이터.txt",
+        "12.노드 모델.txt",
+        "13.노드 시각화.txt"
+      ]
+    },
+    "노동법 RAG": {
+      "path": "노동법 RAG",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1772776648687,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "claude_opi.md",
+      "accessCount": 5,
+      "lastAccessed": 1772776858016,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
