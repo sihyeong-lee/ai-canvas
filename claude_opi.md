@@ -429,105 +429,69 @@ result = pd.DataFrame(rows, columns=[
 ### 노드 5: 파이썬_URL생성
 
 - **카테고리**: 전처리 > 파이썬 스크립트
-- **v2.2 변경**: stopwords 필터링 + 정식 UTF-8 퍼센트 인코딩 (hexmap) + api_method/api_headers_json/api_body 출력 컬럼 추가
+- **v2.3 변경**: `return`/`chr` 완전 제거 — 헬퍼 함수 없이 전체 인라인화 (E-015 대응)
 - 아래 코드를 `execute()` 내부에 복사-붙여넣기:
 
 ```python
 df = dataset.copy() if isinstance(dataset, pd.DataFrame) else pd.DataFrame()
 
-# 정식 UTF-8 퍼센트 인코딩 (hexmap 방식 — chr/format 미사용)
+# 퍼센트 인코딩 조회 테이블 (return/chr/format 미사용 — 헬퍼 함수 없음)
 _hex = "0123456789ABCDEF"
-_safe = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+_safe_set = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
+_pct_map = {}
+for _i in range(256):
+    _bc = bytes([_i]).decode("latin-1")
+    if _i < 128 and _bc in _safe_set:
+        _pct_map[_i] = _bc
+    else:
+        _pct_map[_i] = "%" + _hex[_i >> 4] + _hex[_i & 0xF]
 
-def _pct_encode(s):
-    out = []
-    for b in s.encode("utf-8"):
-        if b < 128 and chr(b) in _safe:
-            out.append(chr(b))
-        else:
-            out.append("%" + _hex[b >> 4] + _hex[b & 0xF])
-    return "".join(out)
-
-# stopwords 필터링 (불용어 제거 후 핵심 키워드로 축약)
 _stopwords = {
     "관련", "법령", "판례", "해석", "행정해석", "문의", "질의", "검토",
     "사례", "안내", "부탁", "알려줘", "알려주세요", "무엇인가요", "어떻게",
     "있나요", "되나요", "하나요", "인가요", "인지요", "이란", "이란게",
 }
 
-def _filter_kw(kw_csv):
-    tokens = [t.strip() for t in kw_csv.split(",") if t.strip()]
-    filtered = [t for t in tokens if t not in _stopwords and len(t) >= 2]
-    return filtered if filtered else tokens[:1] if tokens else ["징계"]
-
 base = "https://www.law.go.kr/DRF/lawSearch.do?OC=tud1211&type=JSON"
 
 rows = []
 for _, r in df.iterrows():
-    fallback = r.get("issue_keywords_csv", "")
-    if fallback is None:
-        fallback = ""
-    else:
-        try:
-            if pd.isna(fallback):
-                fallback = ""
-        except Exception:
-            pass
-    fallback = str(fallback).strip()
-    if fallback.lower() == "nan" or not fallback:
+    fallback = str(r.get("issue_keywords_csv", "") or "").strip()
+    if not fallback or fallback.lower() == "nan":
         fallback = "징계"
 
-    # stopwords 필터링 적용
-    filtered_kws = _filter_kw(fallback)
-    fallback_clean = " ".join(filtered_kws[:2]).strip() or "징계"
+    # stopwords 필터 — 인라인 (함수 정의/return 없음)
+    _fb_tok = [t.strip() for t in fallback.split(",") if t.strip()]
+    _fb_fil = [t for t in _fb_tok if t not in _stopwords and len(t) >= 2]
+    fallback_clean = " ".join(_fb_fil[:2]).strip() if _fb_fil else "징계"
 
-    lq = r.get("law_query", "")
-    if lq is None:
-        lq = ""
-    else:
-        try:
-            if pd.isna(lq):
-                lq = ""
-        except Exception:
-            pass
-    lq = str(lq).strip()
-    if lq.lower() == "nan" or not lq:
+    lq = str(r.get("law_query", "") or "").strip()
+    if not lq or lq.lower() == "nan":
         lq = fallback_clean
-
-    pq = r.get("precedent_query", "")
-    if pq is None:
-        pq = ""
-    else:
-        try:
-            if pd.isna(pq):
-                pq = ""
-        except Exception:
-            pass
-    pq = str(pq).strip()
-    if pq.lower() == "nan" or not pq:
+    pq = str(r.get("precedent_query", "") or "").strip()
+    if not pq or pq.lower() == "nan":
         pq = fallback_clean
-
-    eq = r.get("interpretation_query", "")
-    if eq is None:
-        eq = ""
-    else:
-        try:
-            if pd.isna(eq):
-                eq = ""
-        except Exception:
-            pass
-    eq = str(eq).strip()
-    if eq.lower() == "nan" or not eq:
+    eq = str(r.get("interpretation_query", "") or "").strip()
+    if not eq or eq.lower() == "nan":
         eq = fallback_clean
 
-    # stopwords 필터링 (쿼리 문자열도 적용)
-    lq_clean = " ".join(_filter_kw(lq)).strip() or lq
-    pq_clean = " ".join(_filter_kw(pq)).strip() or pq
-    eq_clean = " ".join(_filter_kw(eq)).strip() or eq
+    # 쿼리별 stopwords 필터 — 인라인
+    _lq_tok = [t.strip() for t in lq.split(",") if t.strip()]
+    _lq_fil = [t for t in _lq_tok if t not in _stopwords and len(t) >= 2]
+    lq_clean = " ".join(_lq_fil).strip() if _lq_fil else lq
 
-    lq_enc = _pct_encode(lq_clean)
-    pq_enc = _pct_encode(pq_clean)
-    eq_enc = _pct_encode(eq_clean)
+    _pq_tok = [t.strip() for t in pq.split(",") if t.strip()]
+    _pq_fil = [t for t in _pq_tok if t not in _stopwords and len(t) >= 2]
+    pq_clean = " ".join(_pq_fil).strip() if _pq_fil else pq
+
+    _eq_tok = [t.strip() for t in eq.split(",") if t.strip()]
+    _eq_fil = [t for t in _eq_tok if t not in _stopwords and len(t) >= 2]
+    eq_clean = " ".join(_eq_fil).strip() if _eq_fil else eq
+
+    # 퍼센트 인코딩 — 인라인 리스트 컴프리헨션 (return/chr 없음)
+    lq_enc = "".join([_pct_map[b] for b in lq_clean.encode("utf-8")])
+    pq_enc = "".join([_pct_map[b] for b in pq_clean.encode("utf-8")])
+    eq_enc = "".join([_pct_map[b] for b in eq_clean.encode("utf-8")])
 
     rows.append({
         "law_query_used": lq_clean,
@@ -1720,7 +1684,8 @@ Phase 2까지 완료 후 진행합니다.
 | E-011 | 노드22 | 응답 컬럼 미노출 | `question_*` 컬럼 선택 | `output_response*` 선택 |
 | E-012 | 노드15 | 목록 API 일부 실패 시 통합 노드 오류 | 상류 red 노드 데이터 끊김 | v2 부분 성공 허용 구조로 해결 |
 | E-013 | 노드19 | 과도 차단 | `evidence >= 2` 기준 엄격 | **v2: `evidence >= 1` 기준으로 완화** |
-| E-014 | 노드5~11 | API 간헐 실패 / 깨진 URL | query 이중 인코딩 (`%25EC...` 발생) | 인코딩 1회 원칙 준수 — `_pct_encode` 함수로 단일 인코딩만 적용 |
+| E-014 | 노드5~11 | API 간헐 실패 / 깨진 URL | query 이중 인코딩 (`%25EC...` 발생) | 인코딩 1회 원칙 준수 — `_pct_map` 테이블로 단일 인코딩만 적용 |
+| E-015 | 노드5 | `Not allowed context: return or yield` | `def` 헬퍼 함수 내부의 `return` 포함 — 런타임이 함수 내부 `return`도 차단 | **v2.3 코드로 교체** — `def` 함수 정의 전부 제거, 퍼센트 인코딩은 `_pct_map` 조회 + 인라인 리스트 컴프리헨션으로 대체 |
 
 ### 즉시 대응 Runbook
 
