@@ -53,20 +53,26 @@
   "hotPaths": [
     {
       "path": "claude_opi.md",
-      "accessCount": 39,
-      "lastAccessed": 1772754133854,
+      "accessCount": 57,
+      "lastAccessed": 1772763173209,
       "type": "directory"
+    },
+    {
+      "path": "",
+      "accessCount": 5,
+      "lastAccessed": 1772760200792,
+      "type": "directory"
+    },
+    {
+      "path": "manual.md",
+      "accessCount": 4,
+      "lastAccessed": 1772762662481,
+      "type": "file"
     },
     {
       "path": "_pdf_text/11.노드 데이터.txt",
       "accessCount": 3,
       "lastAccessed": 1772690055093,
-      "type": "directory"
-    },
-    {
-      "path": "",
-      "accessCount": 1,
-      "lastAccessed": 1772689875695,
       "type": "directory"
     },
     {
@@ -76,9 +82,21 @@
       "type": "file"
     },
     {
-      "path": "manual.md",
+      "path": "lsEfYdInfoGuide.html",
       "accessCount": 1,
-      "lastAccessed": 1772689900539,
+      "lastAccessed": 1772760190920,
+      "type": "file"
+    },
+    {
+      "path": "step1.md",
+      "accessCount": 1,
+      "lastAccessed": 1772760206219,
+      "type": "file"
+    },
+    {
+      "path": "act.md",
+      "accessCount": 1,
+      "lastAccessed": 1772760239203,
       "type": "file"
     }
   ],
