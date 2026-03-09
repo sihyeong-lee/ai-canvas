@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>노무·징계 AI 챗봇</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0F1F3D; --blue: #1A56DB; --blue-l: #3B82F6; --blue-pale: #EFF6FF;
+  --accent: #D97706; --red: #DC2626; --green: #059669;
+  --gray-50: #F8FAFC; --gray-100: #F1F5F9; --gray-200: #E2E8F0;
+  --gray-600: #64748B; --gray-800: #1E293B; --white: #FFFFFF;
+  --font: 'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',-apple-system,sans-serif;
+  --shadow: 0 2px 12px rgba(15,31,61,.08),0 1px 3px rgba(15,31,61,.06);
+  --r: 12px;
+}
+html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
+.deck { width:100%; height:100vh; position:relative; overflow:hidden; background:#000; }
+.slide {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  padding:28px 48px; opacity:0; transform:translateX(60px);
+  transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+.slide.active  { opacity:1; transform:translateX(0); pointer-events:all; }
+.slide.leaving { opacity:0; transform:translateX(-60px); }
+.inner { width:100%; max-width:100%; }
+
+/* NAV */
+.nav {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:12px; z-index:200;
+  background:rgba(15,31,61,.6); backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.12); border-radius:40px; padding:7px 14px;
+}
+.nav-btn {
+  width:32px; height:32px; border-radius:50%; border:1.5px solid rgba(255,255,255,.3);
+  background:rgba(255,255,255,.1); color:white; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:background .2s;
+}
+.nav-btn:hover:not(:disabled) { background:rgba(255,255,255,.25); }
+.nav-btn:disabled { opacity:.3; cursor:default; }
+.nav-counter { font-size:12px; color:rgba(255,255,255,.6); font-weight:600; min-width:36px; text-align:center; }
+.dots { display:flex; gap:5px; align-items:center; }
+.dot { width:6px; height:6px; border-radius:3px; background:rgba(255,255,255,.3); cursor:pointer; transition:all .2s; }
+.dot.active { background:white; width:18px; }
+
+/* ── 공통 타이포 ── */
+.lbl { font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--blue-l); margin-bottom:8px; }
+.ttl { font-size:40px; font-weight:800; letter-spacing:-.02em; line-height:1.18; color:var(--gray-800); margin-bottom:8px; }
+.desc { font-size:16px; color:var(--gray-600); line-height:1.6; }
+.hdr { margin-bottom:28px; }
+.tag {
+  display:inline-block; padding:3px 11px; border-radius:100px;
+  font-size:10px; font-weight:700; letter-spacing:.04em;
+}
+
+/* ── SLIDE 1: TITLE ── */
+.s1 {
+  background:linear-gradient(145deg,#0F1F3D 0%,#1A3560 55%,#0D2952 100%);
+  flex-direction:column; text-align:center;
+}
+.s1::before {
+  content:''; position:absolute; width:700px; height:700px; border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,.13) 0%,transparent 65%);
+  top:-250px; right:-150px; pointer-events:none;
+}
+.s1-badge { display:inline-block; padding:4px 16px; background:rgba(217,119,6,.18); border:1px solid rgba(217,119,6,.4); border-radius:100px; color:#FCD34D; font-size:12px; font-weight:700; letter-spacing:.06em; margin-bottom:22px; }
+.s1-title { font-size:72px; font-weight:800; color:white; line-height:1.1; letter-spacing:-.03em; margin-bottom:20px; }
+.s1-div   { width:60px; height:4px; background:linear-gradient(90deg,var(--blue-l),#F59E0B); border-radius:2px; margin:0 auto 24px; }
+.s1-sub   { font-size:20px; color:rgba(255,255,255,.62); line-height:1.65; max-width:700px; }
+.s1-pills { display:flex; gap:14px; justify-content:center; margin-top:44px; flex-wrap:wrap; }
+.s1-pill  { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:100px; padding:10px 26px; font-size:15px; color:rgba(255,255,255,.8); font-weight:600; }
+
+/* ── SLIDE 2: 문제 + 비교 ── */
+.s2 { background:#F1F5F9; align-items:stretch; padding-top:28px; padding-bottom:28px; }
+.s2 .inner { display:flex; flex-direction:column; }
+.s2-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1; }
+.s2-left { display:flex; flex-direction:column; gap:12px; }
+.s2-right { display:flex; flex-direction:column; gap:10px; }
+
+.flow-mini {
+  background:white; border-radius:var(--r); padding:16px 20px;
+  border:1px solid var(--gray-200); box-shadow:var(--shadow);
+}
+.flow-mini h4 { font-size:15px; font-weight:700; color:var(--gray-800); margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.flow-steps { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.fs { text-align:center; flex:1; }
+.fs-ico  { font-size:20px; }
+.fs-txt  { font-size:12px; color:var(--gray-600); margin-top:3px; line-height:1.3; }
+.fs-time { font-size:11px; color:var(--red); font-weight:700; margin-top:2px; }
+.fa { font-size:14px; color:#CBD5E1; }
+
+.pain-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.pain-item {
+  background:white; border-radius:10px; padding:14px;
+  border:1px solid var(--gray-200); box-shadow:var(--shadow);
+  border-left:3px solid var(--red);
+}
+.pain-item h5 { font-size:14px; font-weight:700; color:var(--gray-800); margin-bottom:5px; }
+.pain-item p  { font-size:12px; color:var(--gray-600); line-height:1.5; }
+
+.cmp-wrap {
+  background:white; border-radius:var(--r); padding:18px 20px;
+  border:1px solid var(--gray-200); box-shadow:var(--shadow); flex:1;
+}
+.cmp-wrap h4 { font-size:13px; font-weight:700; margin-bottom:12px; }
+.cmp-row { display:grid; grid-template-columns:1fr 28px 1fr; gap:8px; align-items:start; }
+.cmp-col { font-size:13px; line-height:1.55; }
+.cmp-col li { display:flex; gap:5px; margin-bottom:5px; color:var(--gray-600); }
+.cmp-arr { display:flex; align-items:center; justify-content:center; padding-top:2px; }
+.cmp-arrow-circle { width:26px; height:26px; border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--blue-l)); display:flex; align-items:center; justify-content:center; color:white; font-size:13px; }
+.cbadge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:100px; margin-bottom:6px; display:inline-block; }
+.cbadge.a { background:#FEE2E2; color:#991B1B; }
+.cbadge.b { background:#D1FAE5; color:#065F46; }
+
+/* ── SLIDE 3: 구조 + 기능 ── */
+.s3 { background:linear-gradient(145deg,#0F1F3D 0%,#162B50 50%,#1A3A6B 100%); }
+.s3 .lbl { color:rgba(147,197,253,1); }
+.s3 .ttl { color:white; }
+.s3 .desc { color:rgba(255,255,255,.6); }
+.s3-grid { display:grid; grid-template-columns:1fr 1.1fr; gap:22px; }
+
+.arch-card {
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  border-radius:14px; padding:18px 20px;
+}
+.arch-card h4 { font-size:13px; font-weight:700; color:rgba(255,255,255,.9); margin-bottom:14px; }
+.arch-steps { display:flex; flex-direction:column; gap:8px; }
+.arch-step {
+  display:flex; gap:12px; align-items:flex-start;
+  background:rgba(255,255,255,.05); border-radius:10px; padding:10px 12px;
+  border:1px solid rgba(255,255,255,.07);
+}
+.as-num {
+  width:22px; height:22px; border-radius:6px; background:rgba(59,130,246,.35);
+  color:rgba(147,197,253,1); font-size:11px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.as-text h6 { font-size:14px; font-weight:700; color:white; margin-bottom:3px; }
+.as-text p  { font-size:12px; color:rgba(255,255,255,.5); line-height:1.4; }
+
+.src-row { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.src-item {
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08);
+  border-radius:10px; padding:10px 14px; display:flex; gap:10px; align-items:center;
+}
+.src-ico { font-size:18px; flex-shrink:0; }
+.src-txt h6 { font-size:12px; font-weight:700; color:rgba(255,255,255,.85); margin-bottom:2px; }
+.src-txt p  { font-size:11px; color:rgba(255,255,255,.45); line-height:1.4; }
+
+.feat-col { display:flex; flex-direction:column; gap:10px; }
+.feat-item {
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  border-radius:12px; padding:14px 16px; display:flex; gap:12px; align-items:flex-start;
+}
+.fi-ico { font-size:22px; flex-shrink:0; margin-top:1px; }
+.fi-body h5 { font-size:15px; font-weight:700; color:white; margin-bottom:5px; }
+.fi-body p  { font-size:13px; color:rgba(255,255,255,.5); line-height:1.5; }
+
+/* ── SLIDE 4: 효과 + Q&A ── */
+.s4 { background:white; align-items:stretch; padding-top:28px; padding-bottom:28px; }
+.s4 .inner { display:flex; flex-direction:column; }
+.s4-grid { display:grid; grid-template-columns:1fr 1.3fr; gap:22px; flex:1; }
+
+.metric-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.mc {
+  background:var(--gray-50); border:1px solid var(--gray-200); border-radius:12px;
+  padding:16px 14px; text-align:center; box-shadow:var(--shadow);
+}
+.mc-num  { font-size:38px; font-weight:800; letter-spacing:-.03em; line-height:1; }
+.mc-lbl  { font-size:14px; font-weight:700; color:var(--gray-800); margin:5px 0 4px; }
+.mc-desc { font-size:12px; color:var(--gray-600); line-height:1.4; }
+.mc-blue { color:var(--blue); } .mc-green { color:var(--green); }
+.mc-acc  { color:var(--accent); } .mc-purp { color:#7C3AED; }
+
+.ben-list { display:flex; flex-direction:column; gap:7px; }
+.ben-i { display:flex; gap:8px; align-items:center; font-size:14px; color:var(--gray-600); }
+.ben-i span:first-child { font-size:16px; }
+
+.qa-wrap { display:flex; flex-direction:column; gap:10px; }
+.q-tabs { display:flex; flex-direction:column; gap:7px; }
+.q-tab {
+  background:var(--gray-50); border:1.5px solid var(--gray-200); border-radius:10px;
+  padding:11px 14px; font-size:12px; color:var(--gray-800); line-height:1.45;
+  cursor:pointer; transition:all .18s; display:flex; gap:10px; align-items:flex-start;
+}
+.q-tab:hover { border-color:var(--blue-l); }
+.q-tab.sel   { border-color:var(--blue); background:var(--blue-pale); }
+.q-n {
+  width:22px; height:22px; border-radius:6px; background:var(--blue-pale); color:var(--blue);
+  display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; flex-shrink:0;
+}
+.ans-box {
+  background:var(--gray-50); border:1px solid var(--gray-200); border-radius:12px; padding:16px;
+}
+.ans-top { display:flex; align-items:center; gap:10px; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--gray-200); }
+.ans-bot-ico {
+  width:30px; height:30px; border-radius:8px;
+  background:linear-gradient(135deg,var(--blue),var(--blue-l));
+  display:flex; align-items:center; justify-content:center; font-size:15px; color:white; flex-shrink:0;
+}
+.ans-top-txt h6 { font-size:12px; font-weight:700; color:var(--gray-800); }
+.ans-top-txt span { font-size:10px; color:var(--gray-600); }
+.ans-body { font-size:14px; color:#374151; line-height:1.65; margin-bottom:10px; }
+.ans-warn {
+  background:#FFF7ED; border-left:3px solid var(--accent);
+  padding:8px 12px; border-radius:0 7px 7px 0;
+  font-size:13px; color:#92400E; line-height:1.5;
+}
+.ans-src { margin-top:8px; font-size:12px; color:var(--gray-600); }
+
+/* ── SLIDE 5: 마무리 ── */
+.s5 {
+  background:linear-gradient(145deg,#0F1F3D 0%,#1A3560 55%,#0D2952 100%);
+  flex-direction:column; text-align:center;
+}
+.s5::before {
+  content:''; position:absolute; width:700px; height:700px; border-radius:50%;
+  background:radial-gradient(circle,rgba(59,130,246,.1) 0%,transparent 65%);
+  top:-250px; right:-200px; pointer-events:none;
+}
+.s5 .lbl  { color:rgba(147,197,253,1); }
+.s5 .ttl  { color:white; font-size:48px; margin-bottom:12px; }
+.s5 .desc { color:rgba(255,255,255,.6); max-width:800px; margin:0 auto; }
+.s5-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0; width:100%; max-width:860px; }
+.s5-card {
+  background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
+  border-radius:14px; padding:20px 18px; text-align:center;
+}
+.s5-ico   { font-size:28px; margin-bottom:10px; }
+.s5-ctitle{ font-size:15px; font-weight:700; color:rgba(255,255,255,.95); margin-bottom:6px; }
+.s5-cdesc { font-size:12px; color:rgba(255,255,255,.55); line-height:1.55; }
+.s5-note {
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+  border-radius:12px; padding:16px 28px; max-width:700px;
+  font-size:13px; color:rgba(255,255,255,.5); line-height:1.7;
+}
+
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 1  타이틀
+══════════════════════════════════════════════ -->
+<section class="slide s1 active" data-idx="0">
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+    <span class="s1-badge">HR 내부 도구 소개</span>
+    <h1 class="s1-title">노무·징계<br>AI 지원 챗봇</h1>
+    <div class="s1-div"></div>
+    <p class="s1-sub">인사담당자가 노무·징계 기준을 <strong style="color:rgba(255,255,255,.9)">즉시, 일관되게</strong> 확인할 수 있도록<br>내부 규정과 근로기준법을 연결한 AI 챗봇을 만들고 있어요</p>
+    <div class="s1-pills">
+      <span class="s1-pill">🎯 대상: ER담당자</span>
+      <span class="s1-pill">⚙️ 주관: 노경기획팀</span>
+      <span class="s1-pill">📅 2026년 3월</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 2  지금 뭐가 문제냐
+══════════════════════════════════════════════ -->
+<section class="slide s2" data-idx="1">
+  <div class="inner">
+    <div class="hdr">
+      <div class="lbl">현재 상황</div>
+      <h2 class="ttl">지금은 이렇게 돌아가고 있어요</h2>
+      <p class="desc">노무·징계 질문이 생기면? → 노경기획팀에 이메일/전화 → 1~3일 기다림 → 회신. 이 구조가 만드는 문제들이 있어요.</p>
+    </div>
+    <div class="s2-grid">
+      <div class="s2-left">
+        <div class="flow-mini">
+          <h4>📮 현재 업무 흐름 <span style="font-size:10px;color:var(--red);font-weight:700;margin-left:6px;">총 1~4 영업일 소요</span></h4>
+          <div class="flow-steps">
+            <div class="fs"><div class="fs-ico">👤</div><div class="fs-txt">HR 담당자<br>질문 발생</div></div>
+            <div class="fa">→</div>
+            <div class="fs"><div class="fs-ico">📧</div><div class="fs-txt">이메일·유선<br>문의</div><div class="fs-time">대기 1~3일</div></div>
+            <div class="fa">→</div>
+            <div class="fs"><div class="fs-ico">🗂️</div><div class="fs-txt">노경기획팀<br>규정 확인</div><div class="fs-time">처리 ~1일</div></div>
+            <div class="fa">→</div>
+            <div class="fs"><div class="fs-ico">📨</div><div class="fs-txt">회신 수령<br>현장 적용</div></div>
+          </div>
+        </div>
+        <div class="pain-grid">
+          <div class="pain-item">
+            <h5>⏳ 응답 지연</h5>
+            <p>긴급 징계 상황에서도 최소 하루 이상 기다려야 해요. 결재가 밀립니다.</p>
+          </div>
+          <div class="pain-item">
+            <h5>🔄 반복 질의</h5>
+            <p>같은 내용을 계속 물어야 하는데, 노경기획팀도 매번 동일하게 답해야 하죠.</p>
+          </div>
+          <div class="pain-item">
+            <h5>👤 사람 의존</h5>
+            <p>노무 지식이 특정 담당자에게만 있어서 이동·부재 시 공백이 생겨요.</p>
+          </div>
+        </div>
+      </div>
+      <div class="s2-right">
+        <div class="cmp-wrap" style="flex:1;">
+          <h4 style="color:var(--gray-800);">🔄 챗봇 도입 전 vs 후</h4>
+          <div class="cmp-row">
+            <div class="cmp-col">
+              <span class="cbadge a">지금 AS-IS</span>
+              <ul style="list-style:none;">
+                <li class="cmp-col li"><span>❌</span><span>개별 이메일·유선 문의</span></li>
+                <li class="cmp-col li"><span>❌</span><span>평균 1~3 영업일 대기</span></li>
+                <li class="cmp-col li"><span>❌</span><span>담당자 부재 시 공백</span></li>
+                <li class="cmp-col li"><span>❌</span><span>구두 전달, 기록 없음</span></li>
+                <li class="cmp-col li"><span>❌</span><span>신규 담당자 진입장벽 높음</span></li>
+              </ul>
+            </div>
+            <div class="cmp-arr"><div class="cmp-arrow-circle">→</div></div>
+            <div class="cmp-col">
+              <span class="cbadge b">챗봇 도입 후</span>
+              <ul style="list-style:none;">
+                <li class="cmp-col li"><span>✅</span><span>챗봇에서 즉시 1차 기준 확인</span></li>
+                <li class="cmp-col li"><span>✅</span><span>24시간 언제든 접근 가능</span></li>
+                <li class="cmp-col li"><span>✅</span><span>야간·주말도 기본 절차 확인</span></li>
+                <li class="cmp-col li"><span>✅</span><span>모든 응답 근거 출처 명시</span></li>
+                <li class="cmp-col li"><span>✅</span><span>전사 동일 DB 기반 일관 안내</span></li>
+                <li class="cmp-col li"><span>✅</span><span>신규자도 바로 기준 파악 가능</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 3  어떻게 만드나
+══════════════════════════════════════════════ -->
+<section class="slide s3" data-idx="2">
+  <div class="inner">
+    <div class="hdr">
+      <div class="lbl">챗봇 구조 &amp; 기능</div>
+      <h2 class="ttl">어떻게 동작하고, 뭘 해줄 수 있나요</h2>
+      <p class="desc">질문을 입력하면 내부 규정 DB + 근로기준법을 동시에 뒤져서 근거 있는 답변을 드려요. 복잡한 건 노경기획팀으로 연결합니다.</p>
+    </div>
+    <div class="s3-grid">
+      <!-- 왼쪽: 동작 구조 + 데이터 소스 -->
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="arch-card">
+          <h4>⚙️ 5단계 처리 흐름</h4>
+          <div class="arch-steps">
+            <div class="arch-step"><div class="as-num">1</div><div class="as-text"><h6>질문 입력</h6><p>HR 담당자가 자연어로 질문 (타이핑 or 선택)</p></div></div>
+            <div class="arch-step"><div class="as-num">2</div><div class="as-text"><h6>내부 DB 검색</h6><p>징계 기준·사례·절차 문서 탐색</p></div></div>
+            <div class="arch-step"><div class="as-num">3</div><div class="as-text"><h6>법령 대조</h6><p>근로기준법 조항·유권해석 확인</p></div></div>
+            <div class="arch-step"><div class="as-num">4</div><div class="as-text"><h6>근거 포함 답변 생성</h6><p>출처 명시 + 주의사항 함께 안내</p></div></div>
+            <div class="arch-step"><div class="as-num">5</div><div class="as-text"><h6>전문가 연계</h6><p>복합·고위험 사안은 노경기획팀으로 안내</p></div></div>
+          </div>
+        </div>
+        <div class="arch-card">
+          <h4>📂 연결되는 데이터 소스</h4>
+          <div class="src-row">
+            <div class="src-item"><div class="src-ico">🏢</div><div class="src-txt"><h6>사내 징계 기준 DB</h6><p>취업규칙, 징계위원회 운영규정, 과거 징계 사례 요약</p></div></div>
+            <div class="src-item"><div class="src-ico">⚖️</div><div class="src-txt"><h6>노동 법령</h6><p>근로기준법 주요 조항, 고용노동부 유권해석</p></div></div>
+            <div class="src-item"><div class="src-ico">📋</div><div class="src-txt"><h6>내부 절차·서식</h6><p>징계 프로세스 체크리스트, 경위서·출석통지서 양식</p></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- 오른쪽: 주요 기능 4개 -->
+      <div class="feat-col">
+        <div class="feat-item">
+          <div class="fi-ico">📌</div>
+          <div class="fi-body">
+            <h5>징계 단계별 절차 안내</h5>
+            <p>경위서 징구 → 소명 기회 → 징계위 소집 → 통보까지 체크리스트로 한 번에. 빠뜨린 단계 있으면 절차 하자 리스크도 알려줘요.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="fi-ico">⚖️</div>
+          <div class="fi-body">
+            <h5>비위 유형별 징계 수위 기준</h5>
+            <p>견책·감봉·정직·강등·해고, 어떤 상황에 어떤 수위가 적정한지 사내 양정 기준표 기반으로 안내. 감봉 한도(근로기준법 제95조)도 같이 확인.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="fi-ico">📖</div>
+          <div class="fi-body">
+            <h5>근로기준법 관련 조항 조회</h5>
+            <p>특정 상황에 맞는 법 조항·판례 요지를 출처와 함께 바로 조회. "이 경우 해고예고수당 줘야 해?" 같은 실무 질문 바로 답해요.</p>
+          </div>
+        </div>
+        <div class="feat-item">
+          <div class="fi-ico">📝</div>
+          <div class="fi-body">
+            <h5>표준 서식 즉시 제공</h5>
+            <p>경위서, 출석통지서, 징계의결서 양식을 상황에 맞게 바로 꺼내줘요. 작성 가이드도 함께.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 4  효과 + Q&A 미리보기
+══════════════════════════════════════════════ -->
+<section class="slide s4" data-idx="3">
+  <div class="inner">
+    <div class="hdr">
+      <div class="lbl">기대 효과 &amp; 미리보기</div>
+      <h2 class="ttl">실제로 어떻게 달라지는지 볼게요</h2>
+    </div>
+    <div class="s4-grid">
+      <!-- 왼쪽: 효과 -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="metric-row">
+          <div class="mc"><div class="mc-num mc-blue">즉시</div><div class="mc-lbl">응답 속도</div><div class="mc-desc">1~3일 → 실시간 전환</div></div>
+          <div class="mc"><div class="mc-num mc-green">60%↓</div><div class="mc-lbl">반복 질의 감소</div><div class="mc-desc">노경기획팀 문의 건수</div></div>
+          <div class="mc"><div class="mc-num mc-purp">통일</div><div class="mc-lbl">기준 일관성</div><div class="mc-desc">전사 동일 DB 기반</div></div>
+          <div class="mc"><div class="mc-num mc-acc">24h</div><div class="mc-lbl">접근 가능</div><div class="mc-desc">야간·주말 포함</div></div>
+        </div>
+        <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:12px;padding:16px;">
+          <div style="font-size:12px;font-weight:700;color:var(--gray-800);margin-bottom:10px;">✅ 추가로 기대하는 것들</div>
+          <div class="ben-list">
+            <div class="ben-i"><span>🛡️</span><span>절차 하자로 인한 부당징계 분쟁 사전 예방</span></div>
+            <div class="ben-i"><span>📚</span><span>신규 HR 담당자 노무 지식 습득 기간 단축</span></div>
+            <div class="ben-i"><span>🔗</span><span>노경기획팀은 복잡한 사안에만 집중 가능</span></div>
+            <div class="ben-i"><span>📁</span><span>모든 판단 근거 기록·추적 가능</span></div>
+            <div class="ben-i"><span>🔄</span><span>담당자 이동해도 지식 단절 없음</span></div>
+          </div>
+        </div>
+      </div>
+      <!-- 오른쪽: Q&A 데모 -->
+      <div class="qa-wrap">
+        <div style="font-size:12px;font-weight:700;color:var(--gray-800);margin-bottom:6px;">💬 실제 질문 미리보기 — 클릭해서 답변 확인</div>
+        <div class="q-tabs">
+          <div class="q-tab sel" onclick="selectQ(0)"><div class="q-n">Q1</div><span>징계위원회 회부 전 확인해야 할 절차는?</span></div>
+          <div class="q-tab" onclick="selectQ(1)"><div class="q-n">Q2</div><span>감봉과 정직, 어떻게 구분하나요?</span></div>
+          <div class="q-tab" onclick="selectQ(2)"><div class="q-n">Q3</div><span>해고 시 사용자가 지켜야 할 사항은?</span></div>
+        </div>
+        <div id="ans-0" class="ans-box">
+          <div class="ans-top">
+            <div class="ans-bot-ico">🤖</div>
+            <div class="ans-top-txt"><h6>노무·징계 지원 챗봇</h6><span>내부 법률정보 안내 · 참고 목적</span></div>
+          </div>
+          <div class="ans-body">징계위원회 회부 전에는 이 순서대로 진행해야 해요.<br>① 비위 사실 확인 &amp; 증빙 자료 확보<br>② 당사자 경위서 징구 + 소명 기회 부여<br>③ 직속 상위 관리자 보고 &amp; HR 검토<br>④ 징계위원회 소집 통보 (개최 5일 전 이상)</div>
+          <div class="ans-warn">⚠ 소명 기회를 안 주면 절차 하자로 징계가 무효될 수 있어요. 최종 판단은 노경기획팀 확인 권장.</div>
+          <div class="ans-src">📎 근거: 취업규칙 징계 조항 · 사내 징계위원회 운영규정</div>
+        </div>
+        <div id="ans-1" class="ans-box hidden">
+          <div class="ans-top">
+            <div class="ans-bot-ico">🤖</div>
+            <div class="ans-top-txt"><h6>노무·징계 지원 챗봇</h6><span>내부 법률정보 안내 · 참고 목적</span></div>
+          </div>
+          <div class="ans-body"><strong>감봉</strong>은 임금 일부를 깎는 재산적 제재예요. 1회 감봉액은 평균임금 1일분의 50%, 월 총액은 급여의 10% 이내여야 해요 (근로기준법 제95조).<br><br><strong>정직</strong>은 출근 의무 + 임금 지급을 함께 정지시키는 더 무거운 처분이에요. 비위가 고의적이거나 재발이 있거나 조직 영향이 클 때 씁니다.</div>
+          <div class="ans-warn">⚠ 같은 비위에 대한 과거 처리 선례와 형평성을 꼭 확인하세요. 양정은 노경기획팀 확인 필요.</div>
+          <div class="ans-src">📎 근거: 근로기준법 제95조 · 사내 징계 양정 기준표</div>
+        </div>
+        <div id="ans-2" class="ans-box hidden">
+          <div class="ans-top">
+            <div class="ans-bot-ico">🤖</div>
+            <div class="ans-top-txt"><h6>노무·징계 지원 챗봇</h6><span>내부 법률정보 안내 · 참고 목적</span></div>
+          </div>
+          <div class="ans-body">해고 시 사용자가 지켜야 할 것들이에요.<br>① 정당한 이유 필요 + 서면으로 통보 (제23조, 제27조)<br>② 30일 전 예고 또는 해고예고수당 지급 (제26조)<br>③ 부당노동행위 해당 여부 사전 검토<br><br>서면 미통보 시 해고 자체가 무효 처리될 수 있어요.</div>
+          <div class="ans-warn">⚠ 구체적 사안의 최종 판단은 노경기획팀 또는 노무사 검토가 필요해요.</div>
+          <div class="ans-src">📎 근거: 근로기준법 제23조 · 제26조 · 제27조</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     SLIDE 5  마무리
+══════════════════════════════════════════════ -->
+<section class="slide s5" data-idx="4">
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:960px;">
+    <div class="lbl">한 줄 요약</div>
+    <h2 class="ttl">HR 담당자의 판단력을 높이는 도구예요</h2>
+    <p class="desc">전문가를 대체하는 게 아니라, 1차 기준을 스스로 빠르게 파악하게 해서 노경기획팀과 현장 담당자 모두 더 중요한 일에 집중하게 하는 거예요.</p>
+    <div class="s5-cards">
+      <div class="s5-card">
+        <div class="s5-ico">⚡</div>
+        <div class="s5-ctitle">즉각적 현장 효과</div>
+        <div class="s5-cdesc">단순 반복 질의가 챗봇으로 소화되면 담당자와 노경기획팀 모두 핵심 업무에 더 많은 시간을 쓸 수 있어요.</div>
+      </div>
+      <div class="s5-card">
+        <div class="s5-ico">🛡️</div>
+        <div class="s5-ctitle">리스크 사전 예방</div>
+        <div class="s5-cdesc">절차 하자로 인한 부당징계 분쟁을 미리 막고, 판단 근거를 체계적으로 기록·관리할 수 있어요.</div>
+      </div>
+      <div class="s5-card">
+        <div class="s5-ico">🌱</div>
+        <div class="s5-ctitle">지식 자산화</div>
+        <div class="s5-cdesc">노경기획팀 전문 지식이 DB에 축적되어 담당자가 바뀌어도 조직의 노무 역량이 이어져요.</div>
+      </div>
+    </div>
+    <div class="s5-note">
+      ⚠ 이 챗봇이 제공하는 정보는 모두 <strong style="color:rgba(255,255,255,.75)">참고 목적</strong>이에요.<br>
+      최종 법적 판단은 반드시 노경기획팀 또는 전문 노무사의 확인을 거쳐야 합니다.
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div class="nav">
+  <button class="nav-btn" id="prev-btn" onclick="go(-1)" disabled>‹</button>
+  <div class="dots" id="dots"></div>
+  <span class="nav-counter" id="counter">1 / 5</span>
+  <button class="nav-btn" id="next-btn" onclick="go(1)">›</button>
+</div>
+
+<script>
+const TOTAL = 5;
+let cur = 0;
+const dotsEl = document.getElementById('dots');
+for (let i = 0; i < TOTAL; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.onclick = () => go(i - cur);
+  dotsEl.appendChild(d);
+}
+function go(delta) {
+  const next = cur + delta;
+  if (next < 0 || next >= TOTAL) return;
+  const all = document.querySelectorAll('.slide');
+  all[cur].classList.remove('active');
+  if (delta > 0) all[cur].classList.add('leaving');
+  cur = next;
+  setTimeout(() => all.forEach(s => s.classList.remove('leaving')), 450);
+  all[cur].classList.add('active');
+  dotsEl.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === cur));
+  document.getElementById('counter').textContent = (cur + 1) + ' / ' + TOTAL;
+  document.getElementById('prev-btn').disabled = cur === 0;
+  document.getElementById('next-btn').disabled = cur === TOTAL - 1;
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1);
+});
+function selectQ(idx) {
+  document.querySelectorAll('.q-tab').forEach((el, i) => el.classList.toggle('sel', i === idx));
+  document.querySelectorAll('[id^="ans-"]').forEach((el, i) => el.classList.toggle('hidden', i !== idx));
+}
+</script>
+</body>
+</html>
