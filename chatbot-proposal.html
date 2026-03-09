@@ -19,13 +19,13 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
 .deck { width:100%; height:100vh; position:relative; overflow:hidden; background:#000; }
 .slide {
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  padding:40px 60px; opacity:0; transform:translateX(60px);
+  padding:28px 48px; opacity:0; transform:translateX(60px);
   transition:opacity .4s cubic-bezier(.4,0,.2,1),transform .4s cubic-bezier(.4,0,.2,1);
   pointer-events:none;
 }
 .slide.active  { opacity:1; transform:translateX(0); pointer-events:all; }
 .slide.leaving { opacity:0; transform:translateX(-60px); }
-.inner { width:100%; max-width:1140px; }
+.inner { width:100%; max-width:100%; }
 
 /* NAV */
 .nav {
@@ -47,10 +47,10 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
 .dot.active { background:white; width:18px; }
 
 /* ── 공통 타이포 ── */
-.lbl { font-size:11px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--blue-l); margin-bottom:6px; }
-.ttl { font-size:34px; font-weight:800; letter-spacing:-.02em; line-height:1.18; color:var(--gray-800); margin-bottom:6px; }
-.desc { font-size:14px; color:var(--gray-600); line-height:1.6; }
-.hdr { margin-bottom:24px; }
+.lbl { font-size:12px; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--blue-l); margin-bottom:8px; }
+.ttl { font-size:40px; font-weight:800; letter-spacing:-.02em; line-height:1.18; color:var(--gray-800); margin-bottom:8px; }
+.desc { font-size:16px; color:var(--gray-600); line-height:1.6; }
+.hdr { margin-bottom:28px; }
 .tag {
   display:inline-block; padding:3px 11px; border-radius:100px;
   font-size:10px; font-weight:700; letter-spacing:.04em;
@@ -67,14 +67,14 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   top:-250px; right:-150px; pointer-events:none;
 }
 .s1-badge { display:inline-block; padding:4px 16px; background:rgba(217,119,6,.18); border:1px solid rgba(217,119,6,.4); border-radius:100px; color:#FCD34D; font-size:12px; font-weight:700; letter-spacing:.06em; margin-bottom:22px; }
-.s1-title { font-size:56px; font-weight:800; color:white; line-height:1.1; letter-spacing:-.03em; margin-bottom:16px; }
-.s1-div   { width:52px; height:3px; background:linear-gradient(90deg,var(--blue-l),#F59E0B); border-radius:2px; margin:0 auto 20px; }
-.s1-sub   { font-size:17px; color:rgba(255,255,255,.62); line-height:1.65; max-width:600px; }
-.s1-pills { display:flex; gap:12px; justify-content:center; margin-top:36px; flex-wrap:wrap; }
-.s1-pill  { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:100px; padding:7px 20px; font-size:13px; color:rgba(255,255,255,.8); font-weight:600; }
+.s1-title { font-size:72px; font-weight:800; color:white; line-height:1.1; letter-spacing:-.03em; margin-bottom:20px; }
+.s1-div   { width:60px; height:4px; background:linear-gradient(90deg,var(--blue-l),#F59E0B); border-radius:2px; margin:0 auto 24px; }
+.s1-sub   { font-size:20px; color:rgba(255,255,255,.62); line-height:1.65; max-width:700px; }
+.s1-pills { display:flex; gap:14px; justify-content:center; margin-top:44px; flex-wrap:wrap; }
+.s1-pill  { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.18); border-radius:100px; padding:10px 26px; font-size:15px; color:rgba(255,255,255,.8); font-weight:600; }
 
 /* ── SLIDE 2: 문제 + 비교 ── */
-.s2 { background:#F1F5F9; align-items:flex-start; padding-top:44px; }
+.s2 { background:#F1F5F9; align-items:flex-start; padding-top:32px; }
 .s2-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
 .s2-left { display:flex; flex-direction:column; gap:14px; }
 .s2-right { display:flex; flex-direction:column; gap:12px; }
@@ -97,8 +97,8 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   border:1px solid var(--gray-200); box-shadow:var(--shadow);
   border-left:3px solid var(--red);
 }
-.pain-item h5 { font-size:12px; font-weight:700; color:var(--gray-800); margin-bottom:4px; }
-.pain-item p  { font-size:11px; color:var(--gray-600); line-height:1.5; }
+.pain-item h5 { font-size:14px; font-weight:700; color:var(--gray-800); margin-bottom:5px; }
+.pain-item p  { font-size:12px; color:var(--gray-600); line-height:1.5; }
 
 .cmp-wrap {
   background:white; border-radius:var(--r); padding:18px 20px;
@@ -137,8 +137,8 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   color:rgba(147,197,253,1); font-size:11px; font-weight:700;
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
-.as-text h6 { font-size:12px; font-weight:700; color:white; margin-bottom:2px; }
-.as-text p  { font-size:11px; color:rgba(255,255,255,.5); line-height:1.4; }
+.as-text h6 { font-size:14px; font-weight:700; color:white; margin-bottom:3px; }
+.as-text p  { font-size:12px; color:rgba(255,255,255,.5); line-height:1.4; }
 
 .src-row { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
 .src-item {
@@ -155,11 +155,11 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   border-radius:12px; padding:14px 16px; display:flex; gap:12px; align-items:flex-start;
 }
 .fi-ico { font-size:22px; flex-shrink:0; margin-top:1px; }
-.fi-body h5 { font-size:13px; font-weight:700; color:white; margin-bottom:4px; }
-.fi-body p  { font-size:11px; color:rgba(255,255,255,.5); line-height:1.45; }
+.fi-body h5 { font-size:15px; font-weight:700; color:white; margin-bottom:5px; }
+.fi-body p  { font-size:13px; color:rgba(255,255,255,.5); line-height:1.5; }
 
 /* ── SLIDE 4: 효과 + Q&A ── */
-.s4 { background:white; align-items:flex-start; padding-top:44px; }
+.s4 { background:white; align-items:flex-start; padding-top:32px; }
 .s4-grid { display:grid; grid-template-columns:1fr 1.3fr; gap:22px; }
 
 .metric-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
@@ -167,9 +167,9 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   background:var(--gray-50); border:1px solid var(--gray-200); border-radius:12px;
   padding:16px 14px; text-align:center; box-shadow:var(--shadow);
 }
-.mc-num  { font-size:32px; font-weight:800; letter-spacing:-.03em; line-height:1; }
-.mc-lbl  { font-size:12px; font-weight:700; color:var(--gray-800); margin:4px 0 3px; }
-.mc-desc { font-size:10px; color:var(--gray-600); line-height:1.4; }
+.mc-num  { font-size:38px; font-weight:800; letter-spacing:-.03em; line-height:1; }
+.mc-lbl  { font-size:14px; font-weight:700; color:var(--gray-800); margin:5px 0 4px; }
+.mc-desc { font-size:12px; color:var(--gray-600); line-height:1.4; }
 .mc-blue { color:var(--blue); } .mc-green { color:var(--green); }
 .mc-acc  { color:var(--accent); } .mc-purp { color:#7C3AED; }
 
@@ -220,8 +220,8 @@ html,body { width:100%; height:100%; overflow:hidden; font-family:var(--font); }
   top:-250px; right:-200px; pointer-events:none;
 }
 .s5 .lbl  { color:rgba(147,197,253,1); }
-.s5 .ttl  { color:white; font-size:40px; margin-bottom:10px; }
-.s5 .desc { color:rgba(255,255,255,.6); max-width:680px; margin:0 auto; }
+.s5 .ttl  { color:white; font-size:48px; margin-bottom:12px; }
+.s5 .desc { color:rgba(255,255,255,.6); max-width:800px; margin:0 auto; }
 .s5-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:28px 0; width:100%; max-width:860px; }
 .s5-card {
   background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.12);
